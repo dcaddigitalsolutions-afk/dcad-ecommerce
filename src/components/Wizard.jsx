@@ -116,6 +116,14 @@ export default function App() {
   const [regForm,setRegForm]=useState({tipo:"dentista",nome:"",cro:"",especialidade:"",clinica:"",whatsapp:"",email:"",senha:"",confirmaSenha:"",docType:"cnpj",cpf:"",cnpj:"",razaoSocial:"",rua:"",numero:"",bairro:"",complemento:"",cidade:"",estado:"",cep:"",entregaIgual:true,entRua:"",entNumero:"",entBairro:"",entComplemento:"",entCidade:"",entEstado:"",entCep:""});
   const [patient,setPatient]=useState(null);
   const [patForm,setPatForm]=useState({nome:"",idade:""});
+  const [patSearch,setPatSearch]=useState("");
+  const [cepLoading,setCepLoading]=useState(null); // field key being loaded
+  const [savedPatients,setSavedPatients]=useState([
+    {id:"p1",nome:"Maria das Graças Almeida",idade:"42 anos"},
+    {id:"p2",nome:"José Carlos Alves",idade:"58 anos"},
+    {id:"p3",nome:"Ana Paula Costa",idade:"35 anos"},
+    {id:"p4",nome:"Roberto Ferreira Silva",idade:"61 anos"},
+  ]);
   const [specialty,setSpecialty]=useState(null);
   const [serviceType,setServiceType]=useState(null);  // 'print' | 'planOnly'
   const [showDisclaimer,setShowDisclaimer]=useState(false);
@@ -128,6 +136,11 @@ export default function App() {
   const [freightOptions,setFreightOptions]=useState(null);
   const [cepDestino,setCepDestino]=useState("");
   const [services,setServices]=useState([]);
+  const [mockOrders]=useState([
+    {id:"001",patient:"Maria das Graças",service:"Cirurgia Guiada Unitária",specialty:"Implantodontia",total:388.98,status:"planning",date:"20/06/2026"},
+    {id:"002",patient:"José Alves",service:"DSD 3D — até 6 dentes",specialty:"Estética Dental",total:466.27,status:"shipped",date:"18/06/2026"},
+    {id:"003",patient:"Ana Costa",service:"Placa Oclusal Impressa",specialty:"DTM",total:360.37,status:"pending_payment",date:"24/06/2026"},
+  ]);
   const set=(k,v)=>setA(a=>({...a,[k]:v}));
 
   function toggleTooth(n){
@@ -174,6 +187,22 @@ export default function App() {
     setFreight(f=>({...f,loading:false,simulated:true}));
   }
 
+  async function buscarCEP(cep, onSuccess, fieldKey){
+    const nums = cep.replace(/\D/g,"");
+    if(nums.length!==8){setToast("CEP inválido. Digite 8 dígitos.");return;}
+    setCepLoading(fieldKey);
+    try{
+      const res = await fetch(`https://viacep.com.br/ws/${nums}/json/`);
+      const data = await res.json();
+      if(data.erro){setToast("CEP não encontrado. Verifique e tente novamente.");}
+      else{onSuccess(data);setToast("");}
+    }catch(e){
+      setToast("Erro ao buscar CEP. Verifique sua conexão.");
+    }finally{
+      setCepLoading(null);
+    }
+  }
+
   function finalize(){
     const freightVal=serviceType==="print"?freight.value:0;
     const svc={id:Date.now(),specialty:specialty?.name,name:"Cirurgia Guiada Unitária"+(A.teeth.length>1?" (2 arcadas)":""),teeth:[...A.teeth],brand:A.brand,kit:A.kit,model:A.model||(A.modelText||"Não especificado"),comps:[...A.comps],observacoes:A.observacoes,serviceType,freight:freightVal>0?{...freight}:null,total:calcTotal(A)+freightVal};
@@ -185,7 +214,7 @@ export default function App() {
     setFreight({method:null,value:0,prazo:"",loading:false,simulated:false});
     setFreightOptions(null);
     setCepDestino("");
-    setSpecialty(null);setService(null);setScreen("specialties");
+    setSpecialty(null);setService(null);setScreen("dashboard");
   }
   function resetAll(){
     setDentist(null);setPatient(null);setServices([]);addNew();setScreen("auth");
@@ -346,7 +375,7 @@ export default function App() {
               <div>
                 <Field label="E-mail" type="email" value={loginForm.email} onChange={v=>setLoginForm(f=>({...f,email:v}))} placeholder="seu@email.com"/>
                 <Field label="Senha" type="password" value={loginForm.senha} onChange={v=>setLoginForm(f=>({...f,senha:v}))} placeholder="••••••••"/>
-                <button onClick={()=>{if(!loginForm.email||!loginForm.senha){setToast("Preencha e-mail e senha.");return;}setDentist({nome:"Dr. João da Silva",cro:"12345",clinica:"Clínica D-CAD",email:loginForm.email});setScreen("patient");}} style={btnStyle(C.red)}>
+                <button onClick={()=>{if(!loginForm.email||!loginForm.senha){setToast("Preencha e-mail e senha.");return;}setDentist({nome:"Dr. João da Silva",cro:"12345",clinica:"Clínica D-CAD",email:loginForm.email});setScreen("dashboard");}} style={btnStyle(C.red)}>
                   Entrar
                 </button>
                 <div style={{textAlign:"center",marginTop:12}}>
@@ -421,14 +450,26 @@ export default function App() {
 
                       {/* Endereço de cobrança */}
                       <div style={{fontSize:11,fontWeight:700,color:C.blue,letterSpacing:1,marginBottom:10,marginTop:4}}>ENDEREÇO DE COBRANÇA</div>
+                      <div style={{marginBottom:12}}>
+                        <label style={{fontSize:11,fontWeight:700,color:C.textSec,display:"block",marginBottom:5,letterSpacing:.5}}>CEP * <span style={{fontSize:10,color:C.blue,fontWeight:400}}>— Buscar preenche os campos automaticamente</span></label>
+                        <div style={{display:"flex",gap:8}}>
+                          <input value={regForm.cep} onChange={e=>setRegForm(f=>({...f,cep:e.target.value}))} placeholder="00000-000" maxLength={9}
+                            style={{flex:1,background:C.dark2,border:`1px solid ${regForm.cep?"rgba(99,102,241,0.4)":C.border}`,borderRadius:10,padding:"11px 14px",color:C.text,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                          <button onClick={()=>buscarCEP(regForm.cep,(d)=>setRegForm(f=>({...f,rua:d.logradouro||f.rua,bairro:d.bairro||f.bairro,cidade:d.localidade||f.cidade,estado:d.uf||f.estado})),"reg_billing")}
+                            disabled={cepLoading==="reg_billing"}
+                            style={{padding:"0 14px",background:C.blue,border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",flexShrink:0,opacity:cepLoading==="reg_billing"?0.6:1,whiteSpace:"nowrap"}}>
+                            {cepLoading==="reg_billing"?"...":"Buscar"}
+                          </button>
+                        </div>
+                      </div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 80px",gap:8}}>
-                        <Field label="Rua / Avenida *" value={regForm.rua} onChange={v=>setRegForm(f=>({...f,rua:v}))} placeholder="Nome da rua"/>
+                        <Field label="Rua / Avenida *" value={regForm.rua} onChange={v=>setRegForm(f=>({...f,rua:v}))} placeholder="Preenchido automaticamente"/>
                         <Field label="Número *" value={regForm.numero} onChange={v=>setRegForm(f=>({...f,numero:v}))} placeholder="444"/>
                       </div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                        <Field label="Bairro *" value={regForm.bairro} onChange={v=>setRegForm(f=>({...f,bairro:v}))} placeholder="Bairro"/>
+                        <Field label="Bairro *" value={regForm.bairro} onChange={v=>setRegForm(f=>({...f,bairro:v}))} placeholder="Preenchido automaticamente"/>
                         <Field label="Complemento" value={regForm.complemento} onChange={v=>setRegForm(f=>({...f,complemento:v}))} placeholder="Sala, apto..."/>
-                        <Field label="Cidade *" value={regForm.cidade} onChange={v=>setRegForm(f=>({...f,cidade:v}))} placeholder="São Luís"/>
+                        <Field label="Cidade *" value={regForm.cidade} onChange={v=>setRegForm(f=>({...f,cidade:v}))} placeholder="Preenchido automaticamente"/>
                         <div style={{marginBottom:12}}>
                           <label style={{fontSize:11,fontWeight:700,color:C.textSec,display:"block",marginBottom:5,letterSpacing:.5}}>ESTADO *</label>
                           <select value={regForm.estado} onChange={e=>setRegForm(f=>({...f,estado:e.target.value}))}
@@ -438,7 +479,6 @@ export default function App() {
                           </select>
                         </div>
                       </div>
-                      <Field label="CEP *" value={regForm.cep} onChange={v=>setRegForm(f=>({...f,cep:v}))} placeholder="00000-000"/>
 
                       {/* Endereço de entrega */}
                       <div style={{fontSize:11,fontWeight:700,color:C.blue,letterSpacing:1,marginBottom:10,marginTop:4}}>ENDEREÇO DE ENTREGA</div>
@@ -451,14 +491,26 @@ export default function App() {
                       </button>
                       {!regForm.entregaIgual&&(
                         <div>
+                          <div style={{marginBottom:12}}>
+                            <label style={{fontSize:11,fontWeight:700,color:C.textSec,display:"block",marginBottom:5,letterSpacing:.5}}>CEP * <span style={{fontSize:10,color:C.blue,fontWeight:400}}>— Buscar preenche automaticamente</span></label>
+                            <div style={{display:"flex",gap:8}}>
+                              <input value={regForm.entCep} onChange={e=>setRegForm(f=>({...f,entCep:e.target.value}))} placeholder="00000-000" maxLength={9}
+                                style={{flex:1,background:C.dark2,border:`1px solid ${regForm.entCep?"rgba(99,102,241,0.4)":C.border}`,borderRadius:10,padding:"11px 14px",color:C.text,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                              <button onClick={()=>buscarCEP(regForm.entCep,(d)=>setRegForm(f=>({...f,entRua:d.logradouro||f.entRua,entBairro:d.bairro||f.entBairro,entCidade:d.localidade||f.entCidade,entEstado:d.uf||f.entEstado})),"reg_delivery")}
+                                disabled={cepLoading==="reg_delivery"}
+                                style={{padding:"0 14px",background:C.blue,border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",flexShrink:0,opacity:cepLoading==="reg_delivery"?0.6:1,whiteSpace:"nowrap"}}>
+                                {cepLoading==="reg_delivery"?"...":"Buscar"}
+                              </button>
+                            </div>
+                          </div>
                           <div style={{display:"grid",gridTemplateColumns:"1fr 80px",gap:8}}>
-                            <Field label="Rua *" value={regForm.entRua} onChange={v=>setRegForm(f=>({...f,entRua:v}))} placeholder="Nome da rua"/>
+                            <Field label="Rua *" value={regForm.entRua} onChange={v=>setRegForm(f=>({...f,entRua:v}))} placeholder="Preenchido automaticamente"/>
                             <Field label="Número *" value={regForm.entNumero} onChange={v=>setRegForm(f=>({...f,entNumero:v}))} placeholder="100"/>
                           </div>
                           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                            <Field label="Bairro *" value={regForm.entBairro} onChange={v=>setRegForm(f=>({...f,entBairro:v}))} placeholder="Bairro"/>
+                            <Field label="Bairro *" value={regForm.entBairro} onChange={v=>setRegForm(f=>({...f,entBairro:v}))} placeholder="Preenchido automaticamente"/>
                             <Field label="Complemento" value={regForm.entComplemento} onChange={v=>setRegForm(f=>({...f,entComplemento:v}))} placeholder="Sala, apto..."/>
-                            <Field label="Cidade *" value={regForm.entCidade} onChange={v=>setRegForm(f=>({...f,entCidade:v}))} placeholder="Cidade"/>
+                            <Field label="Cidade *" value={regForm.entCidade} onChange={v=>setRegForm(f=>({...f,entCidade:v}))} placeholder="Preenchido automaticamente"/>
                             <div style={{marginBottom:12}}>
                               <label style={{fontSize:11,fontWeight:700,color:C.textSec,display:"block",marginBottom:5,letterSpacing:.5}}>ESTADO *</label>
                               <select value={regForm.entEstado} onChange={e=>setRegForm(f=>({...f,entEstado:e.target.value}))}
@@ -468,11 +520,10 @@ export default function App() {
                               </select>
                             </div>
                           </div>
-                          <Field label="CEP *" value={regForm.entCep} onChange={v=>setRegForm(f=>({...f,entCep:v}))} placeholder="00000-000"/>
                         </div>
                       )}
-                    </div>
                   </div>
+                </div>
                 )}
 
                 <button onClick={()=>{
@@ -534,7 +585,7 @@ export default function App() {
             {/* Demo only: simulate approval */}
             <div style={{background:"rgba(234,179,8,0.06)",border:"1px solid rgba(234,179,8,0.2)",borderRadius:10,padding:14,marginBottom:12}}>
               <div style={{fontSize:10,fontWeight:700,color:C.yellow,letterSpacing:1,marginBottom:8}}>MODO DE DEMONSTRAÇÃO</div>
-              <button onClick={()=>{setDentist(d=>({...d,accountStatus:"active"}));setScreen("profile");}}
+              <button onClick={()=>{setDentist(d=>({...d,accountStatus:"active"}));setScreen("dashboard");}}
                 style={{width:"100%",padding:"10px 0",background:"rgba(34,197,94,0.12)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:8,color:C.green,fontWeight:700,fontSize:13,cursor:"pointer"}}>
                 ✓ Simular aprovação pelo admin D-CAD
               </button>
@@ -580,14 +631,26 @@ export default function App() {
             {/* Endereço */}
             <div style={{padding:"12px 14px",background:"rgba(99,102,241,0.06)",border:"1px solid rgba(99,102,241,0.15)",borderRadius:10,marginBottom:14}}>
               <div style={{fontSize:11,fontWeight:700,color:C.blue,letterSpacing:1,marginBottom:12}}>ENDEREÇO DE COBRANÇA</div>
+              <div style={{marginBottom:12}}>
+                <label style={{fontSize:11,fontWeight:700,color:C.textSec,display:"block",marginBottom:5,letterSpacing:.5}}>CEP * <span style={{fontSize:10,color:C.blue,fontWeight:400}}>— Buscar preenche os campos automaticamente</span></label>
+                <div style={{display:"flex",gap:8}}>
+                  <input value={profile.cep} onChange={e=>setProfile(p=>({...p,cep:e.target.value}))} placeholder="00000-000" maxLength={9}
+                    style={{flex:1,background:C.dark2,border:`1px solid ${profile.cep?"rgba(99,102,241,0.4)":C.border}`,borderRadius:10,padding:"11px 14px",color:C.text,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  <button onClick={()=>buscarCEP(profile.cep,(d)=>setProfile(p=>({...p,rua:d.logradouro||p.rua,bairro:d.bairro||p.bairro,cidade:d.localidade||p.cidade,estado:d.uf||p.estado})),"prof_billing")}
+                    disabled={cepLoading==="prof_billing"}
+                    style={{padding:"0 14px",background:C.blue,border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",flexShrink:0,opacity:cepLoading==="prof_billing"?0.6:1,whiteSpace:"nowrap"}}>
+                    {cepLoading==="prof_billing"?"...":"Buscar"}
+                  </button>
+                </div>
+              </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 80px",gap:8,marginBottom:0}}>
-                <Field label="Rua / Avenida *" value={profile.rua} onChange={v=>setProfile(p=>({...p,rua:v}))} placeholder="Nome da rua"/>
+                <Field label="Rua / Avenida *" value={profile.rua} onChange={v=>setProfile(p=>({...p,rua:v}))} placeholder="Preenchido automaticamente"/>
                 <Field label="Número *" value={profile.numero} onChange={v=>setProfile(p=>({...p,numero:v}))} placeholder="Ex: 444"/>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                <Field label="Bairro *" value={profile.bairro} onChange={v=>setProfile(p=>({...p,bairro:v}))} placeholder="Nome do bairro"/>
+                <Field label="Bairro *" value={profile.bairro} onChange={v=>setProfile(p=>({...p,bairro:v}))} placeholder="Preenchido automaticamente"/>
                 <Field label="Complemento" value={profile.complemento} onChange={v=>setProfile(p=>({...p,complemento:v}))} placeholder="Sala, apto..."/>
-                <Field label="Cidade *" value={profile.cidade} onChange={v=>setProfile(p=>({...p,cidade:v}))} placeholder="São Luís"/>
+                <Field label="Cidade *" value={profile.cidade} onChange={v=>setProfile(p=>({...p,cidade:v}))} placeholder="Preenchido automaticamente"/>
                 <div style={{marginBottom:12}}>
                   <label style={{fontSize:11,fontWeight:700,color:C.textSec,display:"block",marginBottom:5,letterSpacing:.5}}>ESTADO *</label>
                   <select value={profile.estado} onChange={e=>setProfile(p=>({...p,estado:e.target.value}))}
@@ -597,7 +660,6 @@ export default function App() {
                   </select>
                 </div>
               </div>
-              <Field label="CEP *" value={profile.cep} onChange={v=>setProfile(p=>({...p,cep:v}))} placeholder="00000-000"/>
             </div>
 
             {/* Endereço de entrega */}
@@ -612,14 +674,26 @@ export default function App() {
               </button>
               {!profile.entregaIgual&&(
                 <div>
+                  <div style={{marginBottom:12}}>
+                    <label style={{fontSize:11,fontWeight:700,color:C.textSec,display:"block",marginBottom:5,letterSpacing:.5}}>CEP * <span style={{fontSize:10,color:C.blue,fontWeight:400}}>— Buscar preenche automaticamente</span></label>
+                    <div style={{display:"flex",gap:8}}>
+                      <input value={profile.entCep} onChange={e=>setProfile(p=>({...p,entCep:e.target.value}))} placeholder="00000-000" maxLength={9}
+                        style={{flex:1,background:C.dark2,border:`1px solid ${profile.entCep?"rgba(99,102,241,0.4)":C.border}`,borderRadius:10,padding:"11px 14px",color:C.text,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                      <button onClick={()=>buscarCEP(profile.entCep,(d)=>setProfile(p=>({...p,entRua:d.logradouro||p.entRua,entBairro:d.bairro||p.entBairro,entCidade:d.localidade||p.entCidade,entEstado:d.uf||p.entEstado})),"prof_delivery")}
+                        disabled={cepLoading==="prof_delivery"}
+                        style={{padding:"0 14px",background:C.blue,border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",flexShrink:0,opacity:cepLoading==="prof_delivery"?0.6:1,whiteSpace:"nowrap"}}>
+                        {cepLoading==="prof_delivery"?"...":"Buscar"}
+                      </button>
+                    </div>
+                  </div>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 80px",gap:8}}>
-                    <Field label="Rua / Avenida *" value={profile.entRua} onChange={v=>setProfile(p=>({...p,entRua:v}))} placeholder="Nome da rua"/>
+                    <Field label="Rua / Avenida *" value={profile.entRua} onChange={v=>setProfile(p=>({...p,entRua:v}))} placeholder="Preenchido automaticamente"/>
                     <Field label="Número *" value={profile.entNumero} onChange={v=>setProfile(p=>({...p,entNumero:v}))} placeholder="Ex: 100"/>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                    <Field label="Bairro *" value={profile.entBairro} onChange={v=>setProfile(p=>({...p,entBairro:v}))} placeholder="Bairro"/>
+                    <Field label="Bairro *" value={profile.entBairro} onChange={v=>setProfile(p=>({...p,entBairro:v}))} placeholder="Preenchido automaticamente"/>
                     <Field label="Complemento" value={profile.entComplemento} onChange={v=>setProfile(p=>({...p,entComplemento:v}))} placeholder="Sala, apto..."/>
-                    <Field label="Cidade *" value={profile.entCidade} onChange={v=>setProfile(p=>({...p,entCidade:v}))} placeholder="Cidade"/>
+                    <Field label="Cidade *" value={profile.entCidade} onChange={v=>setProfile(p=>({...p,entCidade:v}))} placeholder="Preenchido automaticamente"/>
                     <div style={{marginBottom:12}}>
                       <label style={{fontSize:11,fontWeight:700,color:C.textSec,display:"block",marginBottom:5,letterSpacing:.5}}>ESTADO *</label>
                       <select value={profile.entEstado} onChange={e=>setProfile(p=>({...p,entEstado:e.target.value}))}
@@ -629,7 +703,6 @@ export default function App() {
                       </select>
                     </div>
                   </div>
-                  <Field label="CEP *" value={profile.entCep} onChange={v=>setProfile(p=>({...p,entCep:v}))} placeholder="00000-000"/>
                 </div>
               )}
             </div>
@@ -641,7 +714,7 @@ export default function App() {
               const ent=!profile.entregaIgual&&(!profile.entRua||!profile.entNumero||!profile.entCidade||!profile.entEstado||!profile.entCep);
               if(!doc||razao||addr||ent){setToast("Preencha todos os campos obrigatórios.");return;}
               setProfileComplete(true);
-              setScreen("patient");
+              setScreen("dashboard");
             }}>Salvar cadastro e continuar →</Btn>
             {dentist&&screen==="profile"&&services.length>0&&(
               <button onClick={()=>setScreen("resumo")} style={{width:"100%",marginTop:10,padding:"11px 0",background:"none",border:`1px solid ${C.border}`,borderRadius:10,color:C.textSec,fontSize:13,cursor:"pointer"}}>
@@ -655,19 +728,194 @@ export default function App() {
         )}
 
         {/* ════════════════════════════════
+            DASHBOARD
+        ════════════════════════════════ */}
+        {screen==="dashboard"&&(
+          <div>
+            {/* Boas-vindas */}
+            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:24,gap:12}}>
+              <div>
+                <div style={{fontSize:13,color:C.textSec,marginBottom:4}}>Bem-vindo de volta 👋</div>
+                <div style={{fontSize:22,fontWeight:800,lineHeight:1.2}}>{dentist?.nome}</div>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginTop:6}}>
+                  {accountType==="clinica"&&<span style={{fontSize:10,fontWeight:700,background:"rgba(34,197,94,0.12)",color:C.green,padding:"3px 9px",borderRadius:20,border:"1px solid rgba(34,197,94,0.2)"}}>🏥 Clínica Radiológica · 15% desconto</span>}
+                  {accountType==="cursos"&&<span style={{fontSize:10,fontWeight:700,background:"rgba(34,197,94,0.12)",color:C.green,padding:"3px 9px",borderRadius:20,border:"1px solid rgba(34,197,94,0.2)"}}>🎓 Cursos · 15% desconto</span>}
+                  {accountType==="dentista"&&<span style={{fontSize:10,fontWeight:700,background:C.dark3,color:C.textSec,padding:"3px 9px",borderRadius:20}}>🦷 Dentista</span>}
+                </div>
+              </div>
+              <button onClick={()=>{setA({preplan:null,teeth:[],brand:null,kit:null,model:null,modelText:"",comps:[],observacoes:""});setSpecialty(null);setService(null);setServiceType(null);setScreen("patient");}}
+                style={{background:C.red,border:"none",borderRadius:10,padding:"11px 18px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap"}}>
+                + Novo pedido
+              </button>
+            </div>
+
+            {/* Stats */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:24}}>
+              {[
+                {label:"Total de pedidos",value:mockOrders.length,color:C.blue},
+                {label:"Em andamento",value:mockOrders.filter(o=>o.status==="planning"||o.status==="printing").length,color:C.yellow},
+                {label:"Entregues",value:mockOrders.filter(o=>o.status==="shipped"||o.status==="delivered").length,color:C.green},
+              ].map((s,i)=>(
+                <div key={i} style={{background:C.dark2,border:`1px solid ${C.border}`,borderRadius:12,padding:"14px 16px",textAlign:"center"}}>
+                  <div style={{fontSize:26,fontWeight:900,color:s.color}}>{s.value}</div>
+                  <div style={{fontSize:11,color:C.textSec,marginTop:3,lineHeight:1.3}}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Ações rápidas */}
+            <div style={{marginBottom:24}}>
+              <div style={{fontSize:11,fontWeight:700,color:C.textSec,letterSpacing:1,marginBottom:10}}>ACESSO RÁPIDO</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                {[
+                  {icon:"🗂️",label:"Histórico completo",sub:"Todos os pedidos",action:()=>setToast("Histórico em breve")},
+                  {icon:"👥",label:"Meus pacientes",sub:"Gerenciar pacientes",action:()=>setToast("Pacientes em breve")},
+                  {icon:"📁",label:"Baixar arquivos",sub:"Resultados e planejamentos",action:()=>setToast("Arquivos em breve")},
+                  {icon:"💬",label:"Falar com a D-CAD",sub:"WhatsApp (98) 98542-5982",action:()=>window.open("https://wa.me/5598985425982?text=Olá! Sou cliente D-CAD e preciso de suporte.","_blank")},
+                ].map((a,i)=>(
+                  <button key={i} onClick={a.action}
+                    style={{display:"flex",alignItems:"center",gap:10,background:C.dark2,border:`1px solid ${C.border}`,borderRadius:12,padding:"13px 14px",cursor:"pointer",textAlign:"left",color:C.text,transition:"border-color .15s"}}
+                    onMouseEnter={e=>e.currentTarget.style.borderColor="#555"}
+                    onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
+                    <span style={{fontSize:20,flexShrink:0}}>{a.icon}</span>
+                    <div>
+                      <div style={{fontSize:13,fontWeight:700}}>{a.label}</div>
+                      <div style={{fontSize:11,color:C.textSec,marginTop:1}}>{a.sub}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Pedidos recentes */}
+            <div>
+              <div style={{fontSize:11,fontWeight:700,color:C.textSec,letterSpacing:1,marginBottom:10}}>PEDIDOS RECENTES</div>
+              {mockOrders.length===0&&services.length===0?(
+                <div style={{background:C.dark2,border:`1px solid ${C.border}`,borderRadius:12,padding:"32px 20px",textAlign:"center"}}>
+                  <div style={{fontSize:32,marginBottom:10}}>📋</div>
+                  <div style={{fontWeight:700,fontSize:15,marginBottom:6}}>Nenhum pedido ainda</div>
+                  <div style={{fontSize:13,color:C.textSec,marginBottom:16}}>Clique em "Novo pedido" para começar</div>
+                </div>
+              ):(
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {/* Pedidos da sessão atual */}
+                  {services.map((sv,i)=>(
+                    <div key={sv.id} style={{background:C.dark2,border:`1px solid ${C.border}`,borderRadius:12,padding:"14px 16px",display:"flex",alignItems:"center",gap:12}}>
+                      <div style={{width:38,height:38,borderRadius:10,background:"rgba(229,34,41,0.12)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>🦷</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontWeight:700,fontSize:13,marginBottom:2}}>{sv.name}</div>
+                        <div style={{fontSize:11,color:C.textSec}}>Paciente: {patient?.nome||"—"} · {sv.specialty}</div>
+                      </div>
+                      <div style={{textAlign:"right",flexShrink:0}}>
+                        <div style={{fontWeight:800,fontSize:14,color:C.red}}>{fmt(sv.total)}</div>
+                        <div style={{fontSize:10,background:"rgba(234,179,8,0.12)",color:C.yellow,padding:"2px 7px",borderRadius:20,marginTop:3,fontWeight:700}}>Aguard. pagamento</div>
+                      </div>
+                    </div>
+                  ))}
+                  {/* Mock de pedidos anteriores */}
+                  {mockOrders.map(o=>{
+                    const STATUS={
+                      pending_payment:{label:"Aguard. pagamento",color:C.yellow,bg:"rgba(234,179,8,0.1)"},
+                      planning:{label:"Em planejamento",color:C.blue,bg:"rgba(99,102,241,0.1)"},
+                      printing:{label:"Em impressão",color:"#A855F7",bg:"rgba(168,85,247,0.1)"},
+                      shipped:{label:"Enviado",color:C.green,bg:"rgba(34,197,94,0.1)"},
+                      delivered:{label:"Entregue",color:C.green,bg:"rgba(34,197,94,0.1)"},
+                    };
+                    const s=STATUS[o.status]||STATUS.planning;
+                    return(
+                      <div key={o.id} style={{background:C.dark2,border:`1px solid ${C.border}`,borderRadius:12,padding:"14px 16px",display:"flex",alignItems:"center",gap:12}}>
+                        <div style={{width:38,height:38,borderRadius:10,background:"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>📋</div>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontWeight:700,fontSize:13,marginBottom:2}}>{o.service}</div>
+                          <div style={{fontSize:11,color:C.textSec}}>Paciente: {o.patient} · {o.date}</div>
+                        </div>
+                        <div style={{textAlign:"right",flexShrink:0}}>
+                          <div style={{fontWeight:800,fontSize:14,color:C.text}}>{fmt(o.total)}</div>
+                          <div style={{fontSize:10,background:s.bg,color:s.color,padding:"2px 7px",borderRadius:20,marginTop:3,fontWeight:700}}>{s.label}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ════════════════════════════════
             PATIENT SCREEN
         ════════════════════════════════ */}
         {screen==="patient"&&(
-          <div style={{maxWidth:440,margin:"0 auto",paddingTop:8}}>
-            <div style={{marginBottom:20}}>
-              <div style={{fontSize:11,color:C.textSec,marginBottom:4}}>Olá, <b style={{color:C.text}}>{dentist?.nome}</b></div>
-              <div style={{fontSize:20,fontWeight:800,marginBottom:4}}>Dados do paciente</div>
-              <div style={{fontSize:13,color:C.textSec}}>Informe os dados do paciente para quem será realizado o serviço.</div>
+          <div style={{maxWidth:480,margin:"0 auto",paddingTop:8}}>
+            <button onClick={()=>setScreen("dashboard")} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:C.textSec,fontSize:13,cursor:"pointer",padding:"0 0 16px 0",fontFamily:"inherit"}}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>Voltar ao dashboard
+            </button>
+
+            <div style={{fontSize:20,fontWeight:800,marginBottom:4}}>Selecionar paciente</div>
+            <div style={{fontSize:13,color:C.textSec,marginBottom:20}}>Busque um paciente existente ou cadastre um novo.</div>
+
+            {/* Busca */}
+            <div style={{position:"relative",marginBottom:16}}>
+              <svg style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",opacity:.4,pointerEvents:"none"}} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input value={patSearch} onChange={e=>setPatSearch(e.target.value)}
+                placeholder="Buscar paciente pelo nome..."
+                style={{width:"100%",background:C.dark2,border:`1px solid ${patSearch?C.blue:C.border}`,borderRadius:10,padding:"11px 14px 11px 38px",color:C.text,fontSize:13,outline:"none",boxSizing:"border-box",transition:"border-color .2s"}}/>
+              {patSearch&&<button onClick={()=>setPatSearch("")} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:C.textSec,cursor:"pointer",fontSize:16,lineHeight:1}}>×</button>}
             </div>
-            <Field label="Nome completo do paciente *" value={patForm.nome} onChange={v=>setPatForm(f=>({...f,nome:v}))} placeholder="Ex: Maria das Graças Almeida"/>
-            <Field label="Idade do paciente" value={patForm.idade} onChange={v=>setPatForm(f=>({...f,idade:v}))} placeholder="Ex: 45 anos"/>
-            <button disabled={!patForm.nome.trim()} onClick={()=>{setPatient(patForm);setScreen("specialties");}} style={btnStyle(C.red,!patForm.nome.trim())}>
-              Escolher serviço →
+
+            {/* Lista de pacientes */}
+            {savedPatients.filter(p=>p.nome.toLowerCase().includes(patSearch.toLowerCase())).length>0&&(
+              <div style={{marginBottom:20}}>
+                <div style={{fontSize:11,fontWeight:700,color:C.textSec,letterSpacing:1,marginBottom:8}}>
+                  {patSearch?"RESULTADO DA BUSCA":"PACIENTES RECENTES"}
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  {savedPatients
+                    .filter(p=>p.nome.toLowerCase().includes(patSearch.toLowerCase()))
+                    .map(p=>(
+                    <button key={p.id} onClick={()=>{
+                      setPatient(p);
+                      setPatSearch("");
+                      setA({preplan:null,teeth:[],brand:null,kit:null,model:null,modelText:"",comps:[],observacoes:""});
+                      setSpecialty(null);setService(null);setServiceType(null);
+                      setScreen("specialties");
+                    }} style={{display:"flex",alignItems:"center",gap:12,background:C.dark2,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",cursor:"pointer",textAlign:"left",color:C.text,transition:"border-color .15s"}}
+                      onMouseEnter={e=>e.currentTarget.style.borderColor=C.blue}
+                      onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
+                      <div style={{width:36,height:36,borderRadius:10,background:"rgba(99,102,241,0.12)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:C.blue,flexShrink:0}}>
+                        {p.nome.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase()}
+                      </div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontWeight:700,fontSize:13}}>{p.nome}</div>
+                        {p.idade&&<div style={{fontSize:11,color:C.textSec,marginTop:1}}>{p.idade}</div>}
+                      </div>
+                      <div style={{fontSize:12,color:C.blue,fontWeight:600,flexShrink:0}}>Selecionar →</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Divisor */}
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
+              <div style={{flex:1,height:1,background:C.border}}/>
+              <span style={{fontSize:11,color:C.textSec,fontWeight:600,whiteSpace:"nowrap"}}>ou cadastrar novo paciente</span>
+              <div style={{flex:1,height:1,background:C.border}}/>
+            </div>
+
+            {/* Novo paciente */}
+            <Field label="Nome completo *" value={patForm.nome} onChange={v=>setPatForm(f=>({...f,nome:v}))} placeholder="Ex: Maria das Graças Almeida"/>
+            <Field label="Idade" value={patForm.idade} onChange={v=>setPatForm(f=>({...f,idade:v}))} placeholder="Ex: 45 anos"/>
+            <button disabled={!patForm.nome.trim()} onClick={()=>{
+              const novo={id:"p"+Date.now(),nome:patForm.nome.trim(),idade:patForm.idade};
+              setSavedPatients(list=>[novo,...list]);
+              setPatient(novo);
+              setPatForm({nome:"",idade:""});
+              setA({preplan:null,teeth:[],brand:null,kit:null,model:null,modelText:"",comps:[],observacoes:""});
+              setSpecialty(null);setService(null);setServiceType(null);
+              setScreen("specialties");
+            }} style={btnStyle(C.red,!patForm.nome.trim())}>
+              Cadastrar e continuar →
             </button>
           </div>
         )}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 const C={red:"#E52229",dark:"#111",dark2:"#1A1A1A",dark3:"#2A2A2A",border:"rgba(255,255,255,0.08)",text:"#FFF",textSec:"#A0A0A0",textMut:"#444",green:"#22C55E",greenBg:"rgba(34,197,94,0.08)",yellow:"#EAB308",blue:"#6366F1"};
 const fmt=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
@@ -88,11 +88,9 @@ const IMPLANT_TABLE={
 const BRANDS=Object.keys(IMPLANT_TABLE);
 const P={preplan:150,unit:388.98,strauAdd:110,provCaptura:100,provAdesiva:120,cicatriz:80};
 const SUP=[[18,17,16,15,14,13,12,11],[21,22,23,24,25,26,27,28]];
-const INF=[[48,47,46,45,44,43,42,41],[31,32,33,34,35,36,37,38]];
 const SUP_ALL=[...SUP[0],...SUP[1]];
 const arcade=n=>SUP_ALL.includes(n)?"sup":"inf";
 const WIZARD_STEPS_BASE=["Pré-planejamento","Dentes","Marca","Kit","Modelo","Complementares","Informações do Caso"];
-const CEP_DCAD="65060645"; // CEP de origem D-CAD (Renascença II, São Luís/MA)
 
 const PREPLAN_RULES=`Consiste em realizar uma análise prévia dos exames para identificar a viabilidade de execução do serviço. Prazo: 7 dias corridos a contar do envio das informações.
 
@@ -173,7 +171,7 @@ export default function App() {
      * Headers: Authorization: Bearer {token}
      * Body: { cepOrigem, cepDestino, peso, comprimento, altura, largura }
      * ─────────────────────────────────────────────────────────────────── */
-  async function calcularFrete(cepDestino) {
+  async function calcularFrete(cepInput) {
     setFreight(f=>({...f,loading:true,method:null,value:0}));
     setFreightOptions(null);
     await new Promise(r=>setTimeout(r,1200)); // simulate API latency
@@ -1468,8 +1466,10 @@ function InfinitePayCheckout({amount,profileComplete,onProfileIncomplete}){
   const pixAmount=parseFloat((amount*0.90).toFixed(2));
   const pixDiscount=parseFloat((amount*0.10).toFixed(2));
   const installmentVal=parseFloat((amount/3).toFixed(2));
-  const dueDateObj=new Date(Date.now()+14*24*60*60*1000);
-  const dueDate=dueDateObj.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric"});
+  const dueDate=useMemo(()=>{
+    const d=new Date(); d.setDate(d.getDate()+14);
+    return d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric"});
+  },[]);
   const fmt2=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
   const setN=(k,v)=>setNf(f=>({...f,[k]:v}));
 

@@ -6,35 +6,43 @@
 <title>D-CAD — Catálogo de Serviços</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
+*:focus-visible{outline:2px solid var(--blu);outline-offset:2px;border-radius:var(--r3);}
+button,a,[role="button"]{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+button:active:not(:disabled){opacity:.82;transform:scale(.98);}
+@keyframes spin{to{transform:rotate(360deg);}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important;}}
 :root{
   --bg:#0f0f0f;--s1:#1a1a1a;--s2:#222;--s3:#2a2a2a;--s4:#333;
   --bd:rgba(255,255,255,.07);--bd2:rgba(255,255,255,.13);
-  --tx:#f0f0f0;--tx2:#a0a0a0;--tx3:#555;
+  --tx:#f0f0f0;--tx2:#a8a8a8;--tx3:#777;--tx4:#555;
   --red:#E52229;--rdim:rgba(229,34,41,.09);--rbrd:rgba(229,34,41,.28);
   --blu:#6366f1;--bdim:rgba(99,102,241,.1);--bbrd:rgba(99,102,241,.28);
   --grn:#22c55e;--gdim:rgba(34,197,94,.08);--gbrd:rgba(34,197,94,.22);
   --ylw:#eab308;--ydim:rgba(234,179,8,.08);--ybrd:rgba(234,179,8,.22);
-  --r:10px;--r2:7px;--r3:5px;
+  /* Radius tokens — 3 values only */
+  --r:12px;--r2:8px;--r3:6px;
+  /* Spacing rhythm 4dp */
+  --sp-xs:4px;--sp-sm:8px;--sp-md:16px;--sp-lg:24px;
 }
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;display:flex;flex-direction:column;font-size:13px}
 .bar{height:50px;background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 18px;gap:12px;position:sticky;top:0;z-index:100;flex-shrink:0}
 .logo{font-size:14px;font-weight:900;color:var(--red)}.sep{width:1px;height:18px;background:var(--bd2)}
-.crumb{font-size:11px;color:var(--tx3)}.crumb b{color:var(--tx);font-weight:600}
+.crumb{font-size:12px;color:var(--tx3)}.crumb b{color:var(--tx);font-weight:600}
 .bar-r{margin-left:auto;display:flex;gap:7px}
 .wrap{display:flex;flex:1;min-height:0}
 .side{width:196px;flex-shrink:0;background:var(--s1);border-right:1px solid var(--bd);overflow-y:auto;padding:10px 0}
 .main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
-.slbl{font-size:9px;font-weight:700;color:var(--tx3);padding:6px 13px 2px;letter-spacing:.7px;text-transform:uppercase}
-.ni{display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:var(--r3);margin:1px 5px;cursor:pointer;font-size:12px;color:var(--tx2);border:none;background:none;width:calc(100% - 10px);text-align:left;transition:all .12s}
+.slbl{font-size:12px;font-weight:700;color:var(--tx3);padding:6px 13px 2px;letter-spacing:.7px;text-transform:uppercase}
+.ni{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r3);margin:1px 5px;cursor:pointer;font-size:13px;color:var(--tx2);border:none;background:none;width:calc(100% - 10px);text-align:left;transition:all .12s;min-height:36px}
 .ni:hover{background:var(--s2);color:var(--tx)}.ni.on{background:var(--rdim);color:var(--red);font-weight:600}
 .ndot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.nct{margin-left:auto;font-size:9px;font-weight:700;background:var(--s3);color:var(--tx3);padding:1px 5px;border-radius:20px}
+.nct{margin-left:auto;font-size:12px;font-weight:700;background:var(--s3);color:var(--tx3);padding:1px 5px;border-radius:20px}
 .toolbar{padding:14px 18px 0;display:flex;gap:8px;align-items:center}
 .toolbar input,.toolbar select{background:var(--s1);border:1px solid var(--bd2);border-radius:var(--r2);padding:7px 9px;color:var(--tx);font-size:12px;font-family:inherit;outline:none}
 .toolbar input{flex:1}.toolbar input:focus,.toolbar select:focus{border-color:var(--blu)}
 .stats{display:flex;gap:8px;padding:12px 18px 10px;flex-wrap:wrap}
-.stat{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:9px 14px;display:flex;align-items:center;gap:9px}
-.sv{font-size:19px;font-weight:900;line-height:1}.sl{font-size:10px;color:var(--tx2)}
+.stat{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:12px 16px;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.sv{font-size:19px;font-weight:900;line-height:1}.sl{font-size:12px;color:var(--tx2)}
 .list{padding:0 18px 24px;display:flex;flex-direction:column;gap:9px}
 .svc{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;transition:border-color .15s}
 .svc:hover{border-color:var(--bd2)}
@@ -42,68 +50,68 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .abar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch}
 .sbody{flex:1;min-width:0}
 .stop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:3px}
-.sname{font-size:13px;font-weight:700;line-height:1.3}
-.sprice{font-size:14px;font-weight:900;color:var(--red);flex-shrink:0}
-.ssub{font-size:11px;color:var(--tx2);margin-bottom:7px;line-height:1.4}
+.sname{font-size:15px;font-weight:700;line-height:1.3}
+.sprice{font-size:16px;font-weight:900;color:var(--red);flex-shrink:0;letter-spacing:-.3px}
+.ssub{font-size:12px;color:var(--tx2);margin-bottom:7px;line-height:1.4}
 .tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px}
-.tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;border:1px solid}
+.tag{font-size:12px;font-weight:700;padding:2px 7px;border-radius:20px;border:1px solid}
 .strow{display:flex;gap:3px;flex-wrap:wrap}
-.sc{font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px}
+.sc{font-size:12px;font-weight:700;padding:2px 6px;border-radius:20px}
 .sc.on{background:var(--gdim);color:var(--grn);border:1px solid var(--gbrd)}
 .sc.off{background:var(--s2);color:var(--tx3);border:1px solid var(--bd);text-decoration:line-through;opacity:.55}
 .sact{display:flex;gap:5px;flex-shrink:0}
 .sdet{padding:0 15px 11px 29px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .dbox{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:9px 11px}
-.dbt{font-size:9px;font-weight:700;letter-spacing:.5px;margin-bottom:5px}
-.di{font-size:10px;color:var(--tx2);padding:1px 0;display:flex;gap:4px}.di::before{content:"·";flex-shrink:0}
-.sft{border-top:1px solid var(--bd);background:rgba(0,0,0,.1);padding:7px 15px;display:flex;gap:14px;flex-wrap:wrap}
-.fi{font-size:10px;color:var(--tx2)}.fi strong{color:var(--tx);font-weight:600}
-.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:var(--r2);font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:all .15s;white-space:nowrap;font-family:inherit}
+.dbt{font-size:12px;font-weight:700;letter-spacing:.5px;margin-bottom:5px}
+.di{font-size:12px;color:var(--tx2);padding:1px 0;display:flex;gap:4px}.di::before{content:"·";flex-shrink:0}
+.sft{border-top:1px solid var(--bd);background:rgba(0,0,0,.1);padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap}
+.fi{font-size:12px;color:var(--tx2)}.fi strong{color:var(--tx);font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:var(--r2);font-size:12px;font-weight:600;cursor:pointer;border:1px solid;transition:all .15s;white-space:nowrap;font-family:inherit}
 .br{background:var(--red);color:#fff;border-color:var(--red)}.br:hover{background:#c91d24}
 .bg{background:none;color:var(--tx2);border-color:var(--bd2)}.bg:hover{background:var(--s2);color:var(--tx)}
-.bi{width:28px;height:28px;padding:0;justify-content:center;font-size:12px}
-.bb{background:var(--bdim);color:var(--blu);border-color:var(--bbrd);font-size:10px;padding:4px 9px}.bb:hover{background:var(--blu);color:#fff}
+.bi{width:36px;height:36px;padding:0;justify-content:center;font-size:13px;flex-shrink:0}
+.bb{background:var(--bdim);color:var(--blu);border-color:var(--bbrd);font-size:12px;padding:4px 9px}.bb:hover{background:var(--blu);color:#fff}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:14px;overflow-y:auto}
-.modal{background:var(--s1);border:1px solid var(--bd2);border-radius:14px;width:100%;max-width:860px;margin:auto}
+.modal{background:var(--s1);border:1px solid var(--bd2);border-radius:var(--r);width:100%;max-width:860px;margin:auto}
 .mh{padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between}
-.mht{font-size:15px;font-weight:800}
+.mht{font-size:16px;font-weight:800}
 .mb{padding:14px 20px 0;max-height:78vh;overflow-y:auto}
 .mf{padding:12px 20px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px}
 .fsec{margin-bottom:18px}
-.fst{font-size:10px;font-weight:700;color:var(--blu);letter-spacing:.5px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid var(--bbrd)}
+.fst{font-size:12px;font-weight:700;color:var(--blu);letter-spacing:.5px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid var(--bbrd)}
 .fg{display:grid;gap:10px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}.g4{grid-template-columns:1fr 1fr 1fr 1fr}
 .f{display:flex;flex-direction:column;gap:3px}.s2{grid-column:span 2}.s3{grid-column:span 3}.s4{grid-column:span 4}
-label{font-size:9px;font-weight:700;color:var(--tx2);letter-spacing:.3px;text-transform:uppercase}
+label{font-size:12px;font-weight:700;color:var(--tx2);letter-spacing:.3px;text-transform:uppercase}
 input[type=text],input[type=number],textarea,select{background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r2);padding:7px 9px;color:var(--tx);font-size:12px;font-family:inherit;outline:none;width:100%;transition:border-color .15s}
 input:focus,textarea:focus,select:focus{border-color:var(--blu)}
 textarea{resize:vertical;min-height:60px;line-height:1.5}
 select option{background:var(--s2)}
-.hint{font-size:9px;color:var(--tx3);margin-top:2px;line-height:1.4}
+.hint{font-size:12px;color:var(--tx3);margin-top:2px;line-height:1.4}
 .step-sec{border:1px solid var(--bd);border-radius:var(--r2);margin-bottom:8px;overflow:hidden}
 .step-hd{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;background:var(--s2);user-select:none}
 .step-hd:hover{background:var(--s3)}
 .step-hd-l{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
-.step-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
+.step-badge{font-size:12px;font-weight:700;padding:2px 7px;border-radius:20px}
 .step-badge.on{background:var(--gdim);color:var(--grn);border:1px solid var(--gbrd)}
 .step-badge.off{background:var(--s3);color:var(--tx3);border:1px solid var(--bd)}
 .step-name{font-size:12px;font-weight:700}
 .step-body{padding:12px;background:var(--bg);border-top:1px solid var(--bd);display:none}
 .step-body.open{display:block}
-.stbtn{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;cursor:pointer;border:none;font-family:inherit}
+.stbtn{font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;cursor:pointer;border:none;font-family:inherit}
 .stbtn.on{background:var(--gdim);color:var(--grn);border:1px solid var(--gbrd)}
 .stbtn.off{background:var(--rdim);color:var(--red);border:1px solid var(--rbrd)}
-.caret{font-size:10px;color:var(--tx3);transition:transform .2s;flex-shrink:0}
+.caret{font-size:12px;color:var(--tx3);transition:transform .2s;flex-shrink:0}
 .caret.open{transform:rotate(180deg)}
 .led{display:flex;flex-direction:column;gap:5px;margin-bottom:6px}
 .lrow{display:flex;gap:5px;align-items:center}.lrow input{flex:1}
-.add-btn{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--blu);background:none;border:1px dashed var(--bbrd);border-radius:var(--r2);padding:4px 9px;cursor:pointer;font-family:inherit;margin-top:3px}
+.add-btn{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--blu);background:none;border:1px dashed var(--bbrd);border-radius:var(--r2);padding:4px 9px;cursor:pointer;font-family:inherit;margin-top:3px}
 .add-btn:hover{background:var(--bdim)}
 .svc-picker{display:flex;flex-direction:column;gap:5px}
 .svc-pick-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--bd);border-radius:var(--r2);background:var(--s2)}
-.svc-pick-name{flex:1;font-size:11px;font-weight:600}.svc-pick-spec{font-size:9px;color:var(--tx2)}
+.svc-pick-name{flex:1;font-size:12px;font-weight:600}.svc-pick-spec{font-size:12px;color:var(--tx2)}
 .svc-pick-rm{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px}.svc-pick-rm:hover{color:var(--red)}
 .bkm-col{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:10px}
-.bkm-title{font-size:9px;font-weight:700;color:var(--blu);letter-spacing:.5px;margin-bottom:7px}
+.bkm-title{font-size:12px;font-weight:700;color:var(--blu);letter-spacing:.5px;margin-bottom:7px}
 .bkm-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .urg-table{display:flex;flex-direction:column;gap:6px}
 .urg-row{display:grid;grid-template-columns:90px 80px 100px 1fr;gap:8px;align-items:center}
@@ -112,20 +120,20 @@ select option{background:var(--s2)}
 .sdrop-wrap{position:relative;display:inline-block;width:100%}
 .sdrop{position:absolute;top:calc(100% + 4px);left:0;min-width:300px;max-width:400px;background:var(--s1);border:1px solid var(--bd2);border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,.6);z-index:500;overflow:hidden}
 .sdrop-search{padding:8px 10px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:6px}
-.sdrop-search input{flex:1;background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r3);padding:5px 8px;color:var(--tx);font-size:11px;font-family:inherit;outline:none}
+.sdrop-search input{flex:1;background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r3);padding:5px 8px;color:var(--tx);font-size:12px;font-family:inherit;outline:none}
 .sdrop-list{max-height:200px;overflow-y:auto;padding:4px}
-.sdrop-item{padding:7px 10px;border-radius:var(--r3);cursor:pointer;font-size:11px;color:var(--tx2);display:flex;align-items:center;gap:7px;transition:background .1s}
+.sdrop-item{padding:7px 10px;border-radius:var(--r3);cursor:pointer;font-size:12px;color:var(--tx2);display:flex;align-items:center;gap:7px;transition:background .1s}
 .sdrop-item:hover{background:var(--bdim);color:var(--tx)}
 .sdrop-item-new{color:var(--grn);font-weight:600;border-top:1px solid var(--bd);margin-top:3px}
 .sdrop-item-new:hover{background:var(--gdim)}
-.sdrop-empty{padding:12px 10px;font-size:11px;color:var(--tx3);text-align:center}
+.sdrop-empty{padding:12px 10px;font-size:12px;color:var(--tx3);text-align:center}
 /* mem tabs */
 .mem-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
-.mem-tab{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;cursor:pointer;border:1px solid var(--bd);background:var(--s2);color:var(--tx2)}
+.mem-tab{font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;cursor:pointer;border:1px solid var(--bd);background:var(--s2);color:var(--tx2)}
 .mem-tab.on{background:var(--bdim);border-color:var(--bbrd);color:var(--blu)}
 .cat-new-row{display:flex;gap:7px;margin-top:8px}
 .mem-section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.mem-section-title{font-size:10px;font-weight:700;color:var(--blu);letter-spacing:.5px}
+.mem-section-title{font-size:12px;font-weight:700;color:var(--blu);letter-spacing:.5px}
 /* spec rows */
 .spec-row{display:flex;gap:8px;align-items:center;background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:8px 10px}
 .spec-color-dot{width:22px;height:22px;border-radius:50%;flex-shrink:0;border:2px solid rgba(255,255,255,.15);cursor:pointer;position:relative}
@@ -134,44 +142,70 @@ select option{background:var(--s2)}
 .exp-tab-on{background:var(--bdim)!important;border-color:var(--bbrd)!important;color:var(--blu)!important}
 /* confirm */
 .cov{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
-.cbox{background:var(--s1);border:1px solid var(--rbrd);border-radius:14px;padding:26px;max-width:340px;width:100%;text-align:center}
+.cbox{background:var(--s1);border:1px solid var(--rbrd);border-radius:var(--r);padding:26px;max-width:340px;width:100%;text-align:center}
 /* toast */
-.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--s1);border:1px solid var(--gbrd);border-radius:var(--r);padding:8px 16px;font-size:11px;font-weight:600;color:var(--grn);z-index:400;display:flex;align-items:center;gap:6px;box-shadow:0 6px 24px rgba(0,0,0,.6);opacity:0;transition:opacity .25s;pointer-events:none}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--s1);border:1px solid var(--gbrd);border-radius:var(--r);padding:8px 16px;font-size:12px;font-weight:600;color:var(--grn);z-index:400;display:flex;align-items:center;gap:6px;box-shadow:0 6px 24px rgba(0,0,0,.6);opacity:0;transition:opacity .25s;pointer-events:none}
 .toast.show{opacity:1}
 .empty{text-align:center;padding:56px 20px;color:var(--tx2)}
 .ei{font-size:34px;margin-bottom:10px;opacity:.35}.et{font-size:14px;font-weight:700;color:var(--tx);margin-bottom:5px}
 
 /* ── STEP EDITOR ── */
-.step-editor-row{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:8px 10px;margin-bottom:5px;cursor:default}
+.step-editor-row{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:10px 12px;margin-bottom:6px;cursor:default;transition:border-color .12s}
 .step-editor-row.dragging{opacity:.4;border-style:dashed}
 .step-editor-row.drag-over{border-color:var(--blu);background:var(--bdim)}
-.step-drag-handle{cursor:grab;color:var(--tx3);font-size:14px;flex-shrink:0;padding:0 2px;user-select:none}
-.step-drag-handle:active{cursor:grabbing}
+.step-drag-handle{cursor:grab;color:var(--tx2);font-size:16px;flex-shrink:0;padding:2px 4px;user-select:none;border-radius:4px;transition:color .12s}
+.step-drag-handle:hover{color:var(--tx);background:var(--s3)}.step-drag-handle:active{cursor:grabbing}
 .step-editor-ico{width:26px;text-align:center;font-size:13px;flex-shrink:0}
-.step-editor-name{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--tx)}
-.step-editor-type{font-size:9px;color:var(--tx3);background:var(--s3);padding:2px 6px;border-radius:20px;flex-shrink:0}
+.step-editor-name{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--tx)}
+.step-editor-type{font-size:12px;color:var(--tx3);background:var(--s3);padding:2px 6px;border-radius:20px;flex-shrink:0}
 .step-editor-actions{display:flex;gap:4px;flex-shrink:0}
-.step-toggle-pill{font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;cursor:pointer;border:none;font-family:inherit}
+.step-toggle-pill{font-size:12px;font-weight:700;padding:3px 8px;border-radius:20px;cursor:pointer;border:none;font-family:inherit}
 .step-toggle-pill.on{background:var(--gdim);color:var(--grn);border:1px solid var(--gbrd)}
 .step-toggle-pill.off{background:var(--rdim);color:var(--red);border:1px solid var(--rbrd)}
 /* ── STEP CONFIG MODAL ── */
 .scfg-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding:14px;overflow-y:auto}
-.scfg-modal{background:var(--s1);border:1px solid var(--bd2);border-radius:14px;width:100%;max-width:680px;margin:auto}
+.scfg-modal{background:var(--s1);border:1px solid var(--bd2);border-radius:var(--r);width:100%;max-width:680px;margin:auto}
 /* var editor */
 .var-row{display:grid;grid-template-columns:120px 100px 1fr auto;gap:6px;align-items:center;margin-bottom:5px}
-.var-row label{font-size:9px;font-weight:700;color:var(--tx2);text-transform:uppercase}
+.var-row label{font-size:12px;font-weight:700;color:var(--tx2);text-transform:uppercase}
 
 /* ── PRICING RULES ── */
 .price-rule{display:grid;grid-template-columns:160px 100px 1fr auto;gap:8px;align-items:center;margin-bottom:5px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:8px 10px}
-.price-rule label{font-size:9px;color:var(--tx2);font-weight:700}
+.price-rule label{font-size:12px;color:var(--tx2);font-weight:700}
 .qty-table{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px;margin-top:6px}
 .qty-cell{display:flex;flex-direction:column;gap:3px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:7px 9px}
-.qty-cell label{font-size:9px;color:var(--tx3);font-weight:700}
+.qty-cell label{font-size:12px;color:var(--tx3);font-weight:700}
 .qty-cell input{background:var(--bg);border:1px solid var(--bd2);border-radius:var(--r3);padding:4px 7px;color:var(--tx);font-size:12px;font-family:inherit;outline:none;width:100%}
 .qty-cell input:focus{border-color:var(--blu)}
 .img-preview{width:100%;max-height:120px;object-fit:cover;border-radius:var(--r2);margin-top:6px;border:1px solid var(--bd)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1200px){
+  .modal{max-width:700px}
+  .g4{grid-template-columns:1fr 1fr}
+}
+@media(max-width:900px){
+  .side{width:160px}
+  .modal{max-width:calc(100vw - 28px)}
+  .g3,.g4{grid-template-columns:1fr 1fr}
+  .bkm-grid{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .wrap{flex-direction:column}
+  .side{width:100%;max-height:200px;border-right:none;border-bottom:1px solid var(--bd);overflow-x:auto;overflow-y:hidden;display:flex;flex-direction:row;padding:8px}
+  .slbl{display:none}
+  .ni{white-space:nowrap;flex-shrink:0;width:auto}
+  .bar-r{gap:4px}
+  .bar-r .btn{padding:6px 8px;font-size:12px}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .s2,.s3,.s4{grid-column:span 1}
+  .modal{border-radius:var(--r) var(--r) 0 0;margin:auto 0 0}
+  .ov{align-items:flex-end;padding:0}
+  .stats{overflow-x:auto;flex-wrap:nowrap}
+  .stat{flex-shrink:0;min-width:120px}
+}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px}
-code{background:var(--s3);padding:1px 5px;border-radius:3px;font-size:10px;font-family:monospace}
+code{background:var(--s3);padding:1px 5px;border-radius:3px;font-size:12px;font-family:monospace}
 </style>
 </head>
 <body>
@@ -194,15 +228,12 @@ code{background:var(--s3);padding:1px 5px;border-radius:3px;font-size:10px;font-
     <div class="ndot" style="background:#888"></div>Todas<span class="nct" id="ct-all">0</span>
   </button>
   <div id="spec-nav"></div>
-  <div class="slbl" style="margin-top:10px">Ferramentas</div>
-  <button class="ni" onclick="openSpecManager()">🎓 Especialidades</button>
-  <button class="ni" onclick="openMem()">💡 Biblioteca de itens</button>
-  <button class="ni" onclick="openExport()">⬇ Exportar catálogo</button>
+
 </nav>
 
 <div class="main">
   <div class="toolbar">
-    <input id="q" placeholder="Buscar…" oninput="renderList()">
+    <input id="q" placeholder="Buscar…" oninput="debounce(renderList,150)()">
     <select id="ffl" onchange="renderList()"><option value="">Todos os fluxos</option><option value="odonto">Odontograma</option><option value="arch">Arcada</option></select>
     <select id="fst" onchange="renderList()"><option value="">Todos</option><option value="on">Ativos</option><option value="off">Inativos</option></select>
   </div>
@@ -241,14 +272,14 @@ code{background:var(--s3);padding:1px 5px;border-radius:3px;font-size:10px;font-
     </div>
     <div class="fsec" style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:var(--r);padding:14px">
       <div class="fst" style="color:var(--blu);border-color:rgba(99,102,241,.3)">📋 Arquivos necessários
-        <span style="font-size:9px;font-weight:400;color:var(--tx3);margin-left:6px">enviados pelo dentista para iniciar o serviço</span>
+        <span style="font-size:12px;font-weight:400;color:var(--tx3);margin-left:6px">enviados pelo dentista para iniciar o serviço</span>
       </div>
       <div class="led" id="exams-list"></div>
       <button class="add-btn" onclick="openSmartDrop(this,'exams-list','ex','exams')">+ Adicionar arquivo</button>
     </div>
     <div class="fsec" style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:var(--r);padding:14px">
       <div class="fst" style="color:var(--grn);border-color:rgba(34,197,94,.3)">✅ O que está incluso
-        <span style="font-size:9px;font-weight:400;color:var(--tx3);margin-left:6px">entregue ao dentista ao finalizar</span>
+        <span style="font-size:12px;font-weight:400;color:var(--tx3);margin-left:6px">entregue ao dentista ao finalizar</span>
       </div>
       <div class="led" id="inc-list"></div>
       <button class="add-btn" onclick="openSmartDrop(this,'inc-list','in','inc')">+ Adicionar item</button>
@@ -271,11 +302,11 @@ code{background:var(--s3);padding:1px 5px;border-radius:3px;font-size:10px;font-
       <button class="btn bg"            id="exp-tab-json"  onclick="switchExpTab('json')">📦 JSON</button>
       <button class="btn bg"            id="exp-tab-sql"   onclick="switchExpTab('sql')">🗄 SQL Supabase (UPSERT)</button>
     </div>
-    <div style="font-size:10px;color:var(--tx2);margin-bottom:10px;line-height:1.6;background:var(--s2);padding:9px 12px;border-radius:var(--r2)" id="exp-hint"></div>
-    <textarea id="exp-content" readonly style="min-height:300px;font-family:monospace;font-size:10px;line-height:1.5;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r2);padding:10px;resize:vertical;width:100%;color:var(--tx2)"></textarea>
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:10px;line-height:1.6;background:var(--s2);padding:9px 12px;border-radius:var(--r2)" id="exp-hint"></div>
+    <textarea id="exp-content" readonly style="min-height:300px;font-family:monospace;font-size:12px;line-height:1.5;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r2);padding:10px;resize:vertical;width:100%;color:var(--tx2)"></textarea>
   </div>
   <div class="mf">
-    <div style="flex:1;font-size:10px;color:var(--tx3)" id="exp-path"></div>
+    <div style="flex:1;font-size:12px;color:var(--tx3)" id="exp-path"></div>
     <button class="btn bg" onclick="copyExp()">📋 Copiar</button>
     <button class="btn br" onclick="downloadExp()">⬇ Download</button>
   </div>
@@ -290,7 +321,7 @@ code{background:var(--s3);padding:1px 5px;border-radius:3px;font-size:10px;font-
     <div class="mem-tabs" id="mem-tabs" style="margin-top:10px"></div>
     <div id="mem-content"></div>
     <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)">
-      <div style="font-size:10px;font-weight:700;color:var(--ylw);margin-bottom:6px">➕ Nova categoria personalizada</div>
+      <div style="font-size:12px;font-weight:700;color:var(--ylw);margin-bottom:6px">➕ Nova categoria personalizada</div>
       <div class="cat-new-row"><input type="text" id="new-cat-name" placeholder="Ex: Postes, Resinas, Straps…" style="flex:1"><button class="btn bb" onclick="addCustomCategory()">Criar</button></div>
     </div>
   </div>
@@ -304,7 +335,7 @@ code{background:var(--s3);padding:1px 5px;border-radius:3px;font-size:10px;font-
   <div class="mh"><div class="mht">🎓 Gerenciar Especialidades</div><button class="btn bg bi" onclick="document.getElementById('spec-ov').style.display='none'">✕</button></div>
   <div class="mb" style="padding-bottom:16px">
     <div class="fsec" style="margin-top:10px">
-      <div style="font-size:10px;color:var(--tx3);margin-bottom:10px;line-height:1.5">Cor e ordem de exibição na sidebar. <strong style="color:var(--red)">Renomear não atualiza serviços já cadastrados</strong> — atualize manualmente após renomear.</div>
+      <div style="font-size:12px;color:var(--tx3);margin-bottom:10px;line-height:1.5">Cor e ordem de exibição na sidebar. <strong style="color:var(--red)">Renomear não atualiza serviços já cadastrados</strong> — atualize manualmente após renomear.</div>
       <div id="spec-list-editor" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
       <button class="add-btn" onclick="addSpecRow()">+ Nova especialidade</button>
     </div>
@@ -314,11 +345,11 @@ code{background:var(--s3);padding:1px 5px;border-radius:3px;font-size:10px;font-
 </div>
 
 <!-- CONFIRM -->
-<div class="cov" id="cov" style="display:none">
+<div class="cov" id="cov" style="display:none" role="dialog" aria-modal="true" aria-labelledby="cmsg">
 <div class="cbox">
   <div style="font-size:30px;margin-bottom:10px">🗑</div>
   <div style="font-size:14px;font-weight:800;margin-bottom:7px">Excluir serviço?</div>
-  <div style="font-size:11px;color:var(--tx2);margin-bottom:18px" id="cmsg"></div>
+  <div style="font-size:12px;color:var(--tx2);margin-bottom:18px" id="cmsg"></div>
   <div style="display:flex;gap:7px;justify-content:center">
     <button class="btn bg" onclick="document.getElementById('cov').style.display='none'">Cancelar</button>
     <button class="btn br" id="cok">Excluir</button>
@@ -347,7 +378,7 @@ code{background:var(--s3);padding:1px 5px;border-radius:3px;font-size:10px;font-
     </div>
     <div class="fsec" id="scfg-vars-section">
       <div class="fst" id="scfg-vars-title">Opções / Variáveis da etapa</div>
-      <div style="font-size:10px;color:var(--tx3);margin-bottom:10px;line-height:1.5" id="scfg-vars-hint">
+      <div style="font-size:12px;color:var(--tx3);margin-bottom:10px;line-height:1.5" id="scfg-vars-hint">
         Para o tipo <strong>Opções</strong>: cada linha é um card clicável exibido ao dentista. Preencha o <strong>Label</strong> (texto exibido) e o <strong>Valor</strong> (armazenado ao selecionar). O campo <strong>Chave interna</strong> é gerado automaticamente — não precisa preencher.
       </div>
       <div id="scfg-vars"></div>
@@ -384,7 +415,7 @@ code{background:var(--s3);padding:1px 5px;border-radius:3px;font-size:10px;font-
   <div class="mf"><button class="btn bg" onclick="document.getElementById('newstep-ov').style.display='none'">Cancelar</button><button class="btn br" onclick="addNewStep()">Criar etapa</button></div>
 </div>
 </div>
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="alert" aria-live="polite" aria-atomic="true"></div>
 
 <script>
 // ─── IMPLANT TABLE ────────────────────────────────────────────────────────────
@@ -398,6 +429,9 @@ const IMPLANT_TABLE={
   KOPP:[{model:"Cone Morse Screw Platinum Ø 3.5",kit:"SMART GUIDE"},{model:"Cone Morse Screw Slim Ø 3.0",kit:"SMART GUIDE"}],
   IMPLACIL:[{model:"MAESTRO CM AR Ø 3.5 / Ø 4.0",kit:"IMPLAGUIDE"},{model:"DUE CONE CM AR Ø 3.5 / Ø 4.0",kit:"IMPLAGUIDE"}],
 };
+
+// ─── UTILITIES ────────────────────────────────────────────────────────────────
+const debounce=(fn,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);}};
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const SC={'Implantodontia':'#E52229','Estética Dental':'#f97316','DTM e Bruxismo':'#eab308','Prótese Dentária':'#a855f7','Periodontia':'#22c55e','Reabilitação Oral':'#0d9488','Endodontia':'#6366f1','Impressão 3D':'#f472b6','Consultoria Digital':'#94a3b8'};
@@ -510,10 +544,17 @@ function renderSidebar(){
   document.getElementById('nav-all').className=`ni ${curSpec==='all'?'on':''}`;
 }
 function renderStats(){
-  const a=catalog.filter(s=>s.status==='Ativo').length;
-  const p=catalog.filter(s=>s.stepToggle?.planonly==='SIM').length;
-  const sp=new Set(catalog.map(s=>s.specialty).filter(Boolean)).size;
-  document.getElementById('stats').innerHTML=[{v:catalog.length,l:'Serviços',c:'#fff'},{v:a,l:'Ativos',c:'#22c55e'},{v:p,l:'Com planOnly',c:'#eab308'},{v:sp,l:'Especialidades',c:'#6366f1'}].map(({v,l,c})=>`<div class="stat"><div class="sv" style="color:${c}">${v}</div><div class="sl">${l}</div></div>`).join('');
+  const filtered=curSpec==='all'?catalog:catalog.filter(s=>s.specialty===curSpec);
+  const a=filtered.filter(s=>s.status==='Ativo').length;
+  const p=filtered.filter(s=>s.stepToggle?.planonly==='SIM').length;
+  const sp=new Set(filtered.map(s=>s.specialty).filter(Boolean)).size;
+  const ctx=curSpec==='all'?'':'na especialidade';
+  document.getElementById('stats').innerHTML=[
+    {v:filtered.length,l:'Serviços'+(curSpec==='all'?'':` em ${curSpec}`),c:'#fff'},
+    {v:a,l:'Ativos',c:'#22c55e'},
+    {v:p,l:'Com planOnly',c:'#eab308'},
+    {v:sp,l:'Especialidade'+(sp!==1?'s':''),c:'#6366f1'}
+  ].map(({v,l,c})=>`<div class="stat"><div class="sv" style="color:${c}">${v}</div><div class="sl">${l}</div></div>`).join('');
 }
 function renderList(){
   const q=document.getElementById('q').value.toLowerCase();
@@ -554,9 +595,10 @@ function renderList(){
           ${imgH}
         </div>
         <div class="sact">
-          <button class="btn bg bi" onclick="openForm('${s.id}')">✏️</button>
-          <button class="btn bg bi" onclick="dup('${s.id}')">📋</button>
-          <button class="btn bg bi" onclick="confDel('${s.id}','${s.name.replace(/'/g,"\\'")}')">🗑</button>
+          <button class="btn bg bi" onclick="openForm('${s.id}')" aria-label="Editar ${s.name}">✏️</button>
+          <button class="btn bg bi" onclick="dup('${s.id}')" aria-label="Duplicar ${s.name}">📋</button>
+          <button class="btn bg bi" onclick="confDel('${s.id}','${s.name.replace(/'/g,"\\'")}')"
+          aria-label="Excluir ${s.name}">🗑</button>
         </div>
       </div>
       ${(exH||inH)?`<div class="sdet">${exH?`<div class="dbox"><div class="dbt" style="color:var(--blu)">📋 ARQUIVOS NECESSÁRIOS</div>${exH}</div>`:''}${inH?`<div class="dbox"><div class="dbt" style="color:var(--grn)">✅ O QUE ESTÁ INCLUSO</div>${inH}</div>`:''}</div>`:''}
@@ -564,7 +606,7 @@ function renderList(){
         <div class="fi">ID: <strong style="font-family:monospace">${s.id}</strong></div>
         <div class="fi">Grupo: <strong>${s.group||'—'}</strong></div>
         <div class="fi">Prazo: <strong>${s.days||'—'} dias</strong></div>
-        ${s.obs?`<div class="fi" style="font-size:9px;color:var(--tx3);font-style:italic;flex-basis:100%">${s.obs.slice(0,120)}${s.obs.length>120?'…':''}</div>`:''}
+        ${s.obs?`<div class="fi" style="font-size:12px;color:var(--tx3);font-style:italic;flex-basis:100%">${s.obs.slice(0,120)}${s.obs.length>120?'…':''}</div>`:''}
       </div>
     </div>`;
   }).join('');
@@ -633,10 +675,10 @@ function renderStepEditor(){
   // Header
   const hdr=document.createElement('div');
   hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:10px';
-  hdr.innerHTML='<div style="font-size:10px;color:var(--tx3)">Arraste ⠿ para reordenar · ✏️ editar · pill para ativar/desativar</div>';
+  hdr.innerHTML='<div style="font-size:12px;color:var(--tx3)">Arraste ⠿ para reordenar · ✏️ editar · pill para ativar/desativar</div>';
   const addBtn=document.createElement('button');
   addBtn.className='btn bb';
-  addBtn.style.cssText='font-size:10px;padding:4px 9px';
+  addBtn.style.cssText='font-size:12px;padding:4px 9px';
   addBtn.textContent='+ Nova etapa';
   addBtn.onclick=openNewStep;
   hdr.appendChild(addBtn);
@@ -674,7 +716,7 @@ function renderStepEditor(){
     const info=document.createElement('div');
     info.style.cssText='flex:1;min-width:0';
     const nm=document.createElement('div');nm.className='step-editor-name';nm.textContent=st.l||st.k;
-    const dc=document.createElement('div');dc.style.cssText='font-size:10px;color:var(--tx3)';dc.textContent=st.desc||'';
+    const dc=document.createElement('div');dc.style.cssText='font-size:12px;color:var(--tx3)';dc.textContent=st.desc||'';
     info.appendChild(nm);info.appendChild(dc);
     row.appendChild(info);
 
@@ -741,10 +783,10 @@ function removeStep(i){
   if(document.getElementById('rmcfm-'+i))return;
   const cfm=document.createElement('div');
   cfm.id='rmcfm-'+i;
-  cfm.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--rdim);border:1px solid var(--rbrd);border-radius:var(--r2);margin-bottom:4px;font-size:11px';
+  cfm.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--rdim);border:1px solid var(--rbrd);border-radius:var(--r2);margin-bottom:4px;font-size:12px';
   cfm.innerHTML=`<span style="flex:1;color:var(--red);font-weight:600">Remover "${st.l}"?</span>
-    <button class="btn br" style="padding:4px 10px;font-size:10px" onclick="doRemoveStep(${i})">Sim, remover</button>
-    <button class="btn bg" style="padding:4px 10px;font-size:10px" onclick="document.getElementById('rmcfm-${i}')?.remove()">Cancelar</button>`;
+    <button class="btn br" style="padding:4px 10px;font-size:12px" onclick="doRemoveStep(${i})">Sim, remover</button>
+    <button class="btn bg" style="padding:4px 10px;font-size:12px" onclick="document.getElementById('rmcfm-${i}')?.remove()">Cancelar</button>`;
   row.insertAdjacentElement('afterend',cfm);
 }
 
@@ -776,7 +818,7 @@ function buildStepBodyByIdx(i){
     const picked=related.map(sid=>{const sv=catalog.find(x=>x.id===sid);return sv?`<div class="svc-pick-item" id="pick-${uid}-${sid}"><div class="svc-pick-name">${sv.name}</div><div class="svc-pick-spec">${sv.specialty}</div><button class="svc-pick-rm" onclick="removeStepSvc(${i},'${sid}')">✕</button></div>`:''}).join('');
     return `<div class="fg g2">
       <div class="f s2"><label>Serviços vinculados</label>
-        <div class="svc-picker" id="${uid}-picker" style="margin-bottom:6px">${picked||'<div style="font-size:11px;color:var(--tx3);padding:4px 0">Nenhum vinculado</div>'}</div>
+        <div class="svc-picker" id="${uid}-picker" style="margin-bottom:6px">${picked||'<div style="font-size:12px;color:var(--tx3);padding:4px 0">Nenhum vinculado</div>'}</div>
         ${svcOpts?`<select id="${uid}-sel" style="margin-bottom:4px"><option value="">Selecionar…</option>${svcOpts}</select><button class="btn bb" onclick="addStepSvc(${i},'${uid}')">+ Vincular</button>`:`<button class="btn bb" onclick="openForm()">+ Cadastrar serviço</button>`}
       </div>${obs}</div>`;
   }
@@ -792,24 +834,24 @@ function buildStepBodyByIdx(i){
           value="${bf[b]!=null?bf[b]:''}"
           step="0.01" placeholder="0 = sem taxa"
           oninput="setBrandFee('${b}',this.value)">
-        <span style="font-size:8px;color:var(--tx3)">R$ por guia/arcada</span>
+        <span style="font-size:12px;color:var(--tx3)">R$ por guia/arcada</span>
       </div>`).join('');
     return `<div>
-      <div style="font-size:10px;color:var(--tx3);margin-bottom:10px;line-height:1.5">
+      <div style="font-size:12px;color:var(--tx3);margin-bottom:10px;line-height:1.5">
         Marcas aceitas neste serviço. Kits e modelos vêm das <strong style="color:var(--ylw)">Correlações</strong> na Biblioteca.
       </div>
       <div class="led" id="brands-led"></div>
       <button class="add-btn" onclick="openSmartDropBrands(this)" style="margin-bottom:14px">+ Adicionar marca</button>
       ${brands.length?`
       <div style="margin-top:6px">
-        <div style="font-size:10px;font-weight:700;color:var(--tx2);margin-bottom:7px">
+        <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:7px">
           Taxa adicional por marca <span style="font-weight:400;color:var(--tx3)">— cobrada por guia/arcada selecionada</span>
         </div>
         <div class="qty-table">${bfRowsHTML}</div>
-        <div style="font-size:9px;color:var(--tx3);margin-top:5px">
+        <div style="font-size:12px;color:var(--tx3);margin-top:5px">
           Ex: Straumann = R$110 por guia. Com 2 arcadas → +R$220.
         </div>
-      </div>`:'<div style="font-size:10px;color:var(--tx3)">Adicione marcas acima para configurar taxas.</div>'}
+      </div>`:'<div style="font-size:12px;color:var(--tx3)">Adicione marcas acima para configurar taxas.</div>'}
       <div class="fg g2" style="margin-top:12px">${obs}</div>
     </div>`;
   }
@@ -823,10 +865,10 @@ function buildStepBodyByIdx(i){
     const n=info.normal||0,ex=info.expresso||20,ur=info.urgente||40;
     return `<div>
       <div class="urg-table">
-        <div class="urg-row"><div style="font-size:9px;color:var(--tx2);font-weight:700">Tier</div><div style="font-size:9px;color:var(--tx2);font-weight:700">%</div><div style="font-size:9px;color:var(--tx2);font-weight:700">Valor</div><div></div></div>
-        <div class="urg-row"><div style="font-size:11px;font-weight:600">Normal</div><div><input type="number" id="${uid}-normal" value="${n}" min="0" oninput="svcSteps[${i}].data.normal=parseInt(this.value);recalcUrgency()"></div><div class="urg-calc" id="${uid}-calc-n">R$ ${base.toFixed(2).replace('.',',')}</div><div style="font-size:10px;color:var(--tx2)">Padrão</div></div>
-        <div class="urg-row"><div style="font-size:11px;font-weight:600;color:var(--ylw)">Expresso</div><div><input type="number" id="${uid}-expresso" value="${ex}" min="0" oninput="svcSteps[${i}].data.expresso=parseInt(this.value);recalcUrgency()"></div><div class="urg-calc" id="${uid}-calc-e">R$ ${(base*(1+ex/100)).toFixed(2).replace('.',',')}</div><div style="font-size:10px;color:var(--tx2)">+${ex}%</div></div>
-        <div class="urg-row"><div style="font-size:11px;font-weight:600;color:var(--red)">Urgente</div><div><input type="number" id="${uid}-urgente" value="${ur}" min="0" oninput="svcSteps[${i}].data.urgente=parseInt(this.value);recalcUrgency()"></div><div class="urg-calc" id="${uid}-calc-u">R$ ${(base*(1+ur/100)).toFixed(2).replace('.',',')}</div><div style="font-size:10px;color:var(--tx2)">+${ur}%</div></div>
+        <div class="urg-row"><div style="font-size:12px;color:var(--tx2);font-weight:700">Tier</div><div style="font-size:12px;color:var(--tx2);font-weight:700">%</div><div style="font-size:12px;color:var(--tx2);font-weight:700">Valor</div><div></div></div>
+        <div class="urg-row"><div style="font-size:12px;font-weight:600">Normal</div><div><input type="number" id="${uid}-normal" value="${n}" min="0" oninput="svcSteps[${i}].data.normal=parseInt(this.value);recalcUrgency()"></div><div class="urg-calc" id="${uid}-calc-n">R$ ${base.toFixed(2).replace('.',',')}</div><div style="font-size:12px;color:var(--tx2)">Padrão</div></div>
+        <div class="urg-row"><div style="font-size:12px;font-weight:600;color:var(--ylw)">Expresso</div><div><input type="number" id="${uid}-expresso" value="${ex}" min="0" oninput="svcSteps[${i}].data.expresso=parseInt(this.value);recalcUrgency()"></div><div class="urg-calc" id="${uid}-calc-e">R$ ${(base*(1+ex/100)).toFixed(2).replace('.',',')}</div><div style="font-size:12px;color:var(--tx2)">+${ex}%</div></div>
+        <div class="urg-row"><div style="font-size:12px;font-weight:600;color:var(--red)">Urgente</div><div><input type="number" id="${uid}-urgente" value="${ur}" min="0" oninput="svcSteps[${i}].data.urgente=parseInt(this.value);recalcUrgency()"></div><div class="urg-calc" id="${uid}-calc-u">R$ ${(base*(1+ur/100)).toFixed(2).replace('.',',')}</div><div style="font-size:12px;color:var(--tx2)">+${ur}%</div></div>
       </div>
       <div class="fg g2" style="margin-top:10px">${obs}</div></div>`;
   }
@@ -834,7 +876,7 @@ function buildStepBodyByIdx(i){
   // PLAN-ONLY
   if(st.type==='planonly'||k==='planonly'){
     const po=info||{};
-    const pbqRows=Object.entries(po.priceByQty||{}).map(([q,p])=>`<div class="lrow"><span style="font-size:11px;color:var(--tx2);width:80px;flex-shrink:0">${q} implantes</span><input type="number" value="${p}" id="pbq-${q}" step="0.01"><button class="btn bg bi" onclick="removePbqRow(${q})">✕</button></div>`).join('');
+    const pbqRows=Object.entries(po.priceByQty||{}).map(([q,p])=>`<div class="lrow"><span style="font-size:12px;color:var(--tx2);width:80px;flex-shrink:0">${q} implantes</span><input type="number" value="${p}" id="pbq-${q}" step="0.01"><button class="btn bg bi" onclick="removePbqRow(${q})">✕</button></div>`).join('');
     return `<div class="fg g2">
       <div class="f"><label>Preço planOnly R$</label><input type="number" id="${uid}-po-price" value="${po.price||0}" step="0.01" oninput="svcSteps[${i}].data.price=parseFloat(this.value)"></div>
       <div class="f"><label>Prazo planOnly dias</label><input type="number" id="${uid}-po-days" value="${po.days||5}" oninput="svcSteps[${i}].data.days=parseInt(this.value)"></div>
@@ -852,12 +894,12 @@ function buildStepBodyByIdx(i){
           ${o.ico?`<span style="font-size:18px">${o.ico}</span>`:''}
           <div style="flex:1;min-width:0">
             <div style="font-size:12px;font-weight:600">${o.label||o.key}</div>
-            <div style="font-size:9px;color:var(--tx3);font-family:monospace">${o.key}</div>
+            <div style="font-size:12px;color:var(--tx3);font-family:monospace">${o.key}</div>
           </div>
         </div>`).join('')
-      :`<div style="font-size:10px;color:var(--tx3);padding:6px 0">Nenhuma opção configurada. Clique em ✏️ para adicionar.</div>`;
+      :`<div style="font-size:12px;color:var(--tx3);padding:6px 0">Nenhuma opção configurada. Clique em ✏️ para adicionar.</div>`;
     return `<div>
-      <div style="font-size:10px;color:var(--tx3);margin-bottom:8px">Opções exibidas como cards clicáveis no wizard:</div>
+      <div style="font-size:12px;color:var(--tx3);margin-bottom:8px">Opções exibidas como cards clicáveis no wizard:</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">${optsHTML}</div>
       ${obs}
     </div>`;
@@ -876,14 +918,14 @@ function buildStepBody(st,info){
     const related=info.services||[];
     const svcOpts=catalog.filter(x=>x.id!==editId).map(x=>`<option value="${x.id}">${x.name} (${x.specialty})</option>`).join('');
     const picked=related.map(sid=>{const sv=catalog.find(x=>x.id===sid);return sv?`<div class="svc-pick-item"><div class="svc-pick-name">${sv.name}</div><div class="svc-pick-spec">${sv.specialty}</div><button class="svc-pick-rm" onclick="removeComplSvc('${st.k}','${sid}')">✕</button></div>`:''}).join('');
-    return`<div class="fg g2"><div class="f s2"><label>Serviços complementares</label><div class="svc-picker" id="cp-${st.k}" style="margin-bottom:6px">${picked||'<div style="font-size:11px;color:var(--tx3);padding:4px 0">Nenhum vinculado</div>'}</div>${svcOpts?`<select id="cs-${st.k}" style="margin-bottom:4px"><option value="">Selecionar…</option>${svcOpts}</select><button class="btn bb" onclick="addComplSvc('${st.k}')">+ Vincular</button>`:`<button class="btn bb" onclick="openForm()">+ Cadastrar serviço</button>`}</div>${obsField(st.k,info)}</div>`;
+    return`<div class="fg g2"><div class="f s2"><label>Serviços complementares</label><div class="svc-picker" id="cp-${st.k}" style="margin-bottom:6px">${picked||'<div style="font-size:12px;color:var(--tx3);padding:4px 0">Nenhum vinculado</div>'}</div>${svcOpts?`<select id="cs-${st.k}" style="margin-bottom:4px"><option value="">Selecionar…</option>${svcOpts}</select><button class="btn bb" onclick="addComplSvc('${st.k}')">+ Vincular</button>`:`<button class="btn bb" onclick="openForm()">+ Cadastrar serviço</button>`}</div>${obsField(st.k,info)}</div>`;
   }
 
   if(st.k==='marca'){
     if(!stepInfo.marca)stepInfo.marca={brands:[],straumannAdd:110,obs:''};
     if(!stepInfo.marca.brands)stepInfo.marca.brands=info.brands||[];
     return`<div>
-      <div style="font-size:10px;color:var(--tx3);margin-bottom:10px;line-height:1.5">Selecione as marcas aceitas. Kits e modelos são configurados automaticamente via <strong style="color:var(--ylw)">Biblioteca → Correlações</strong>.</div>
+      <div style="font-size:12px;color:var(--tx3);margin-bottom:10px;line-height:1.5">Selecione as marcas aceitas. Kits e modelos são configurados automaticamente via <strong style="color:var(--ylw)">Biblioteca → Correlações</strong>.</div>
       <div class="led" id="brands-led"></div>
       <button class="add-btn" onclick="openSmartDropBrands(this)">+ Adicionar marca</button>
       <div class="fg g2" style="margin-top:12px">
@@ -897,7 +939,7 @@ function buildStepBody(st,info){
     const related=info.services||[];
     const svcOpts=catalog.filter(x=>x.id!==editId).map(x=>`<option value="${x.id}">${x.name} (${x.specialty})</option>`).join('');
     const picked=related.map(sid=>{const sv=catalog.find(x=>x.id===sid);return sv?`<div class="svc-pick-item"><div class="svc-pick-name">${sv.name}</div><div class="svc-pick-spec">${sv.specialty}</div><button class="svc-pick-rm" onclick="removeComplSvc('${st.k}','${sid}')">✕</button></div>`:''}).join('');
-    return`<div class="fg g2"><div class="f s2"><label>Serviços adicionais</label><div class="svc-picker" id="cp-${st.k}" style="margin-bottom:6px">${picked||'<div style="font-size:11px;color:var(--tx3);padding:4px 0">Nenhum vinculado</div>'}</div>${svcOpts?`<select id="cs-${st.k}" style="margin-bottom:4px"><option value="">Selecionar…</option>${svcOpts}</select><button class="btn bb" onclick="addComplSvc('${st.k}')">+ Vincular</button>`:`<button class="btn bb" onclick="openForm()">+ Cadastrar serviço</button>`}</div>${obsField(st.k,info)}</div>`;
+    return`<div class="fg g2"><div class="f s2"><label>Serviços adicionais</label><div class="svc-picker" id="cp-${st.k}" style="margin-bottom:6px">${picked||'<div style="font-size:12px;color:var(--tx3);padding:4px 0">Nenhum vinculado</div>'}</div>${svcOpts?`<select id="cs-${st.k}" style="margin-bottom:4px"><option value="">Selecionar…</option>${svcOpts}</select><button class="btn bb" onclick="addComplSvc('${st.k}')">+ Vincular</button>`:`<button class="btn bb" onclick="openForm()">+ Cadastrar serviço</button>`}</div>${obsField(st.k,info)}</div>`;
   }
 
   if(st.k==='sliced') return`<div class="fg g2"><div class="f"><label>Valor do arquivo (R$)</label><input type="number" id="si-sliced-price" value="${info.price||50}" step="0.01" oninput="syncStepInfo('sliced','price',parseFloat(this.value))"></div>${obsField(st.k,info)}</div>`;
@@ -907,10 +949,10 @@ function buildStepBody(st,info){
     const n=info.normal||0,ex=info.expresso||20,ur=info.urgente||40;
     return`<div>
       <div class="urg-table">
-        <div class="urg-row"><div style="font-size:9px;color:var(--tx2);font-weight:700">Tier</div><div style="font-size:9px;color:var(--tx2);font-weight:700">Acréscimo %</div><div style="font-size:9px;color:var(--tx2);font-weight:700">Valor calculado</div><div style="font-size:9px;color:var(--tx2);font-weight:700">Obs</div></div>
-        <div class="urg-row"><div style="font-size:11px;font-weight:600">Normal</div><div><input type="number" id="si-prazo-normal" value="${n}" min="0" step="1" oninput="recalcUrgency()"></div><div class="urg-calc" id="calc-normal">R$ ${base.toFixed(2).replace('.',',')}</div><div style="font-size:10px;color:var(--tx2)">Padrão</div></div>
-        <div class="urg-row"><div style="font-size:11px;font-weight:600;color:var(--ylw)">Expresso</div><div><input type="number" id="si-prazo-expresso" value="${ex}" min="0" step="1" oninput="recalcUrgency()"></div><div class="urg-calc" id="calc-expresso">R$ ${(base*(1+ex/100)).toFixed(2).replace('.',',')}</div><div style="font-size:10px;color:var(--tx2)">+${ex}% s/ base</div></div>
-        <div class="urg-row"><div style="font-size:11px;font-weight:600;color:var(--red)">Urgente</div><div><input type="number" id="si-prazo-urgente" value="${ur}" min="0" step="1" oninput="recalcUrgency()"></div><div class="urg-calc" id="calc-urgente">R$ ${(base*(1+ur/100)).toFixed(2).replace('.',',')}</div><div style="font-size:10px;color:var(--tx2)">+${ur}% s/ base</div></div>
+        <div class="urg-row"><div style="font-size:12px;color:var(--tx2);font-weight:700">Tier</div><div style="font-size:12px;color:var(--tx2);font-weight:700">Acréscimo %</div><div style="font-size:12px;color:var(--tx2);font-weight:700">Valor calculado</div><div style="font-size:12px;color:var(--tx2);font-weight:700">Obs</div></div>
+        <div class="urg-row"><div style="font-size:12px;font-weight:600">Normal</div><div><input type="number" id="si-prazo-normal" value="${n}" min="0" step="1" oninput="recalcUrgency()"></div><div class="urg-calc" id="calc-normal">R$ ${base.toFixed(2).replace('.',',')}</div><div style="font-size:12px;color:var(--tx2)">Padrão</div></div>
+        <div class="urg-row"><div style="font-size:12px;font-weight:600;color:var(--ylw)">Expresso</div><div><input type="number" id="si-prazo-expresso" value="${ex}" min="0" step="1" oninput="recalcUrgency()"></div><div class="urg-calc" id="calc-expresso">R$ ${(base*(1+ex/100)).toFixed(2).replace('.',',')}</div><div style="font-size:12px;color:var(--tx2)">+${ex}% s/ base</div></div>
+        <div class="urg-row"><div style="font-size:12px;font-weight:600;color:var(--red)">Urgente</div><div><input type="number" id="si-prazo-urgente" value="${ur}" min="0" step="1" oninput="recalcUrgency()"></div><div class="urg-calc" id="calc-urgente">R$ ${(base*(1+ur/100)).toFixed(2).replace('.',',')}</div><div style="font-size:12px;color:var(--tx2)">+${ur}% s/ base</div></div>
       </div>
       <div class="fg g2" style="margin-top:10px">${obsField(st.k,info)}</div>
     </div>`;
@@ -920,7 +962,7 @@ function buildStepBody(st,info){
 
   if(st.k==='planonly'){
     const po=info||{};
-    const pbqRows=Object.entries(po.priceByQty||{}).map(([q,p])=>`<div class="lrow"><span style="font-size:11px;color:var(--tx2);width:80px;flex-shrink:0">${q} implantes</span><input type="number" value="${p}" id="pbq-${q}" step="0.01" oninput="updatePbq()"><button class="btn bg bi" onclick="removePbqRow(${q})">✕</button></div>`).join('');
+    const pbqRows=Object.entries(po.priceByQty||{}).map(([q,p])=>`<div class="lrow"><span style="font-size:12px;color:var(--tx2);width:80px;flex-shrink:0">${q} implantes</span><input type="number" value="${p}" id="pbq-${q}" step="0.01" oninput="updatePbq()"><button class="btn bg bi" onclick="removePbqRow(${q})">✕</button></div>`).join('');
     return`<div class="fg g2">
       <div class="f"><label>Preço planOnly R$</label><input type="number" id="si-po-price" value="${po.price||0}" step="0.01"></div>
       <div class="f"><label>Prazo planOnly dias</label><input type="number" id="si-po-days" value="${po.days||5}"></div>
@@ -982,7 +1024,7 @@ function renderPricingSection(){
   // Config header
   const pbqCfg=document.createElement('div');
   pbqCfg.innerHTML=`
-    <div style="font-size:10px;font-weight:700;color:var(--tx2);margin-bottom:8px">
+    <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:8px">
       Tabela de preço por quantidade
       <span style="font-weight:400;color:var(--tx3);margin-left:4px">— preencha os valores por faixa</span>
     </div>
@@ -1015,7 +1057,7 @@ function renderPricingSection(){
           oninput="setPbqVal(${q},this.value)">
       </div>`).join('')}
     </div>
-    <div style="font-size:9px;color:var(--tx3);margin-top:6px">${qNote}</div>`;
+    <div style="font-size:12px;color:var(--tx3);margin-top:6px">${qNote}</div>`;
   pbqSection.appendChild(pbqCfg);
   body.appendChild(pbqSection);
 
@@ -1026,7 +1068,7 @@ function renderPricingSection(){
 
 function addonRowHTML(a,i){
   return`<div class="price-rule" id="addon-row-${i}">
-    <div class="f"><label>Chave</label><input type="text" value="${a.key||''}" placeholder="ex: prov_captura" oninput="updateAddon(${i},'key',this.value)" style="font-family:monospace;font-size:11px"></div>
+    <div class="f"><label>Chave</label><input type="text" value="${a.key||''}" placeholder="ex: prov_captura" oninput="updateAddon(${i},'key',this.value)" style="font-family:monospace;font-size:12px"></div>
     <div class="f"><label>Valor R$</label><input type="number" value="${a.value||''}" step="0.01" oninput="updateAddon(${i},'value',parseFloat(this.value))"></div>
     <div class="f"><label>Label</label><input type="text" value="${a.label||''}" placeholder="Nome exibido" oninput="updateAddon(${i},'label',this.value)"></div>
     <div style="display:flex;flex-direction:column;gap:3px">
@@ -1109,8 +1151,8 @@ function buildTypeGrid(gridId,hiddenId,currentType){
     return`<div onclick="selectStepType('${gridId}','${hiddenId}','${t.t}')" id="stype-${gridId}-${t.t}"
       style="padding:8px 6px;border:1px solid ${sel?'var(--blu)':'var(--bd)'};border-radius:var(--r2);text-align:center;cursor:pointer;background:${sel?'var(--bdim)':'var(--s2)'};transition:all .12s">
       <div style="font-size:16px;margin-bottom:4px">${t.ico}</div>
-      <div style="font-size:9px;font-weight:700;color:${sel?'var(--blu)':'var(--tx2)'}">${t.label}</div>
-      <div style="font-size:8px;color:var(--tx3);margin-top:2px">${t.desc}</div>
+      <div style="font-size:12px;font-weight:700;color:${sel?'var(--blu)':'var(--tx2)'}">${t.label}</div>
+      <div style="font-size:12px;color:var(--tx3);margin-top:2px">${t.desc}</div>
     </div>`;
   }).join('');
 }
@@ -1199,7 +1241,7 @@ function addVarRowWith(v){
       </div>
       <div class="f" style="gap:2px">
         <label>Valor interno</label>
-        <input type="text" id="${id}-key" value="${v.key||''}" placeholder="ex: dsd3d" style="font-family:monospace;font-size:11px">
+        <input type="text" id="${id}-key" value="${v.key||''}" placeholder="ex: dsd3d" style="font-family:monospace;font-size:12px">
       </div>
       <div class="f" style="gap:2px">
         <label>Ícone</label>
@@ -1210,7 +1252,7 @@ function addVarRowWith(v){
     d.innerHTML=`
       <div class="f" style="gap:2px">
         <label>Chave interna <span style="font-weight:400;color:var(--tx3)">(identificador no código)</span></label>
-        <input type="text" id="${id}-key" value="${v.key||''}" placeholder="ex: qty, material" style="font-family:monospace;font-size:11px">
+        <input type="text" id="${id}-key" value="${v.key||''}" placeholder="ex: qty, material" style="font-family:monospace;font-size:12px">
       </div>
       <select id="${id}-type" style="margin-top:14px">
         <option value="text"    ${v.type==='text'   ?'selected':''}>Texto</option>
@@ -1319,7 +1361,7 @@ function openSmartDropWith(btn,available,memKey,listId,prefix){
       +(isNew?`<div class="sdrop-item sdrop-item-new" onclick="pickNewItem('${q.trim().replace(/'/g,"\\'")}','${listId||''}','${prefix||''}','${memKey||''}',event)"><span>✨</span>Criar "<strong>${q.trim()}</strong>"</div>`:'');
   }
 
-  box.innerHTML=`<div class="sdrop-search"><span style="font-size:11px;color:var(--tx3)">🔍</span><input id="sdrop-q" placeholder="Buscar ou criar…" autocomplete="off"></div><div class="sdrop-list"></div>`;
+  box.innerHTML=`<div class="sdrop-search"><span style="font-size:12px;color:var(--tx3)">🔍</span><input id="sdrop-q" placeholder="Buscar ou criar…" autocomplete="off"></div><div class="sdrop-list"></div>`;
   drop.appendChild(box);
   btn.parentElement.insertBefore(drop,btn.nextSibling);
   activeDrop=drop;buildList('');
@@ -1386,7 +1428,7 @@ let pbqCt=0;
 function addPbqRow(qty='',price=''){
   const id='pbq'+(++pbqCt);
   const d=document.createElement('div');d.className='lrow';d.id='pbqw-'+id;
-  d.innerHTML=`<span style="font-size:11px;color:var(--tx2);width:80px;flex-shrink:0">Nº implantes</span><input type="number" id="${id}-q" value="${qty}" style="width:70px;flex:none"><span style="font-size:11px;margin:0 4px;color:var(--tx2)">R$</span><input type="number" id="${id}-p" value="${price}" step="0.01" style="flex:1"><button class="btn bg bi" onclick="document.getElementById('pbqw-${id}').remove()">✕</button>`;
+  d.innerHTML=`<span style="font-size:12px;color:var(--tx2);width:80px;flex-shrink:0">Nº implantes</span><input type="number" id="${id}-q" value="${qty}" style="width:70px;flex:none"><span style="font-size:12px;margin:0 4px;color:var(--tx2)">R$</span><input type="number" id="${id}-p" value="${price}" step="0.01" style="flex:1"><button class="btn bg bi" onclick="document.getElementById('pbqw-${id}').remove()">✕</button>`;
   document.getElementById('pbq-led')?.appendChild(d);
 }
 function removePbqRow(q){document.getElementById('pbq-led')?.querySelector(`[id$="-q"][value="${q}"]`)?.closest('.lrow')?.remove();}
@@ -1404,6 +1446,11 @@ function getLV(listId){return[...document.getElementById(listId)?.querySelectorA
 function syncStepInfo(k,field,val){if(!stepInfo[k])stepInfo[k]={};stepInfo[k][field]=val;}
 
 // ─── SAVE ─────────────────────────────────────────────────────────────────────
+function saveWithLoading(){
+  const btn=document.getElementById('save-btn');
+  if(btn){btn.disabled=true;btn.innerHTML='<span style="width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .7s linear infinite"></span> Salvando…';}
+  setTimeout(()=>save(),20);
+}
 function save(){
   const g=id=>document.getElementById(id)?.value?.trim();
   if(!g('f-spec')||!g('f-id')||!g('f-name')){toast('Preencha especialidade, ID e nome.','red');return;}
@@ -1442,6 +1489,7 @@ function save(){
   const svc={id:g('f-id'),specialty:g('f-spec'),group:g('f-group'),name:g('f-name'),type:g('f-id'),desc:g('f-desc'),fullDesc:g('f-fd'),status:document.getElementById('f-status').value,flow:document.getElementById('f-flow').value,price:parseFloat(g('f-price'))||0,days:parseInt(g('f-days'))||7,imageUrl:g('f-imgurl')||undefined,stepToggle:toggles,stepData:data2,steps:JSON.parse(JSON.stringify(svcSteps)),pricing:JSON.parse(JSON.stringify(window._svcPricing||{})),priceByQty:window._svcPricing?.baseMode==='per_qty'?(window._svcPricing.priceByQty||undefined):undefined,exams,includes,obs:''};
   if(editId){const i=catalog.findIndex(s=>s.id===editId);if(i>-1)catalog[i]=svc;}else catalog.push(svc);
   persist();closeForm();renderAll();toast(editId?'Serviço atualizado!':'Serviço criado!');
+  const btn=document.getElementById('save-btn');if(btn){btn.disabled=false;btn.innerHTML='Salvar serviço';}
 }
 
 function dup(id){const s=catalog.find(x=>x.id===id);if(!s)return;const cp=JSON.parse(JSON.stringify(s));cp.id=s.id+'_copia';cp.name=s.name+' (cópia)';catalog.push(cp);persist();renderAll();toast('Duplicado.');}
@@ -1564,7 +1612,7 @@ function renderMemContent(key){
   if(key.startsWith('custom:')){items=(memory.custom||{})[key.replace('custom:','')]||[];}
   else{items=memory[key]||[];}
   memCtrs2[key]=0;
-  content.innerHTML=`<div class="mem-section-hd"><div class="mem-section-title">${BUILTIN_CATS.find(c=>c.key===key)?.label||'⭐ '+key.replace('custom:','')} <span style="font-size:9px;color:var(--tx3)">— ${items.length} itens</span></div></div><div class="led" id="mem-led-active"></div><button class="add-btn" onclick="addMemRowActive()">+ Adicionar item</button>`;
+  content.innerHTML=`<div class="mem-section-hd"><div class="mem-section-title">${BUILTIN_CATS.find(c=>c.key===key)?.label||'⭐ '+key.replace('custom:','')} <span style="font-size:12px;color:var(--tx3)">— ${items.length} itens</span></div></div><div class="led" id="mem-led-active"></div><button class="add-btn" onclick="addMemRowActive()">+ Adicionar item</button>`;
   const led=document.getElementById('mem-led-active');
   items.forEach(v=>addMemRowTo(led,key,v));
 }
@@ -1614,7 +1662,7 @@ function renderCorrelations(content){
   const allBrands=[...new Set([...(memory.brands||[]),...Object.keys(IMPLANT_TABLE)])].sort();
   const cur=window._corrBrand||(allBrands[0]||'');window._corrBrand=cur;
   content.innerHTML=`
-    <div style="font-size:10px;color:var(--tx3);margin-bottom:12px;line-height:1.5">Kits e modelos pré-carregados do IMPLANT_TABLE. Adicione novas marcas e correlações manualmente.</div>
+    <div style="font-size:12px;color:var(--tx3);margin-bottom:12px;line-height:1.5">Kits e modelos pré-carregados do IMPLANT_TABLE. Adicione novas marcas e correlações manualmente.</div>
     <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
       <select id="corr-brand-sel" style="flex:1;max-width:220px" onchange="window._corrBrand=this.value;saveCorrModelEdits();renderCorrelations(document.getElementById('mem-content'))">
         ${allBrands.map(b=>`<option value="${b}" ${b===cur?'selected':''}>${b}</option>`).join('')}
@@ -1642,13 +1690,13 @@ function renderCorrelations(content){
 }
 function renderCorrKits(brand){
   const led=document.getElementById('corr-kit-led');if(!led)return;
-  led.innerHTML=getCorrKits(brand).map((k,i)=>`<div class="lrow"><span style="flex:1;font-size:11px;font-weight:600;color:var(--tx)">${k}</span><button class="btn bg bi" title="Ver modelos" onclick="document.getElementById('corr-kit-sel').value='${k}';renderCorrModels('${brand}','${k}')">👁</button><button class="btn bg bi" onclick="removeCorrKit('${brand}','${k}')">✕</button></div>`).join('')||'<div style="font-size:10px;color:var(--tx3)">Nenhum kit</div>';
+  led.innerHTML=getCorrKits(brand).map((k,i)=>`<div class="lrow"><span style="flex:1;font-size:12px;font-weight:600;color:var(--tx)">${k}</span><button class="btn bg bi" title="Ver modelos" onclick="document.getElementById('corr-kit-sel').value='${k}';renderCorrModels('${brand}','${k}')">👁</button><button class="btn bg bi" onclick="removeCorrKit('${brand}','${k}')">✕</button></div>`).join('')||'<div style="font-size:12px;color:var(--tx3)">Nenhum kit</div>';
 }
 function renderCorrModels(brand,kit){
   const led=document.getElementById('corr-model-led');if(!led)return;
-  if(!kit){led.innerHTML='<div style="font-size:10px;color:var(--tx3)">Selecione um kit</div>';return;}
+  if(!kit){led.innerHTML='<div style="font-size:12px;color:var(--tx3)">Selecione um kit</div>';return;}
   const models=getCorrModels(brand,kit);
-  led.innerHTML=models.map((m,i)=>`<div class="lrow"><input type="text" value="${m.replace(/"/g,'&quot;')}" oninput="getCorrModels('${brand}','${kit}')[${i}]=this.value" style="flex:1"><button class="btn bg bi" onclick="removeCorrModel('${brand}','${kit}',${i})">✕</button></div>`).join('')||'<div style="font-size:10px;color:var(--tx3)">Nenhum modelo</div>';
+  led.innerHTML=models.map((m,i)=>`<div class="lrow"><input type="text" value="${m.replace(/"/g,'&quot;')}" oninput="getCorrModels('${brand}','${kit}')[${i}]=this.value" style="flex:1"><button class="btn bg bi" onclick="removeCorrModel('${brand}','${kit}',${i})">✕</button></div>`).join('')||'<div style="font-size:12px;color:var(--tx3)">Nenhum modelo</div>';
 }
 function addCorrBrand(){const inp=document.getElementById('corr-new-brand');const name=inp?.value?.trim();if(!name)return;const c=getCorr();if(c[name]){toast('Já existe.','red');return;}c[name]={};if(!memory.brands)memory.brands=[];if(!memory.brands.includes(name))memory.brands.push(name);window._corrBrand=name;renderCorrelations(document.getElementById('mem-content'));}
 function removeCorrBrand(brand){if(!confirm(`Remover "${brand}" e suas correlações?`))return;delete memory.correlations[brand];memory.brands=(memory.brands||[]).filter(b=>b!==brand);window._corrBrand=(memory.brands[0]||Object.keys(IMPLANT_TABLE)[0]||'');renderCorrelations(document.getElementById('mem-content'));}
@@ -1663,7 +1711,7 @@ function addSpecRow(){addSpecRowWith({name:'',color:'#6366f1',order:specialties.
 function addSpecRowWith(sp){
   const uid='specr'+(++specRowCt);
   const d=document.createElement('div');d.className='spec-row';d.id='specrow-'+uid;
-  d.innerHTML=`<div class="spec-color-dot" style="background:${sp.color}" id="sdot-${uid}"><input type="color" value="${sp.color}" oninput="document.getElementById('sdot-${uid}').style.background=this.value;document.getElementById('stag-${uid}').style.background=this.value+'22';document.getElementById('stag-${uid}').style.color=this.value"></div><input type="text" id="sname-${uid}" value="${sp.name}" placeholder="Nome da especialidade" style="flex:1" oninput="document.getElementById('stag-${uid}').textContent=this.value||'Nova'"><input type="number" id="sorder-${uid}" value="${sp.order||1}" style="width:52px;text-align:center" title="Ordem"><span id="stag-${uid}" style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;border:1px solid;background:${sp.color}22;color:${sp.color};border-color:${sp.color}55;white-space:nowrap">${sp.name||'Nova'}</span><button class="btn bg bi" onclick="removeSpecRow('${uid}')">🗑</button>`;
+  d.innerHTML=`<div class="spec-color-dot" style="background:${sp.color}" id="sdot-${uid}"><input type="color" value="${sp.color}" oninput="document.getElementById('sdot-${uid}').style.background=this.value;document.getElementById('stag-${uid}').style.background=this.value+'22';document.getElementById('stag-${uid}').style.color=this.value"></div><input type="text" id="sname-${uid}" value="${sp.name}" placeholder="Nome da especialidade" style="flex:1" oninput="document.getElementById('stag-${uid}').textContent=this.value||'Nova'"><input type="number" id="sorder-${uid}" value="${sp.order||1}" style="width:52px;text-align:center" title="Ordem"><span id="stag-${uid}" style="font-size:12px;font-weight:700;padding:2px 7px;border-radius:20px;border:1px solid;background:${sp.color}22;color:${sp.color};border-color:${sp.color}55;white-space:nowrap">${sp.name||'Nova'}</span><button class="btn bg bi" onclick="removeSpecRow('${uid}')">🗑</button>`;
   document.getElementById('spec-list-editor').appendChild(d);
 }
 function removeSpecRow(uid){

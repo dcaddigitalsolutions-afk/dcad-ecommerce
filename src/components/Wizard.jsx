@@ -306,6 +306,7 @@ export default function App() {
   const [showTutorial,setShowTutorial]=useState(false);
   const [tutorialStep,setTutorialStep]=useState(0);
   const [tutorialNeverShow,setTutorialNeverShow]=useState(false);
+  const TUTORIAL_VIDEO_URL=""; // Cole aqui a URL do vídeo (YouTube embed ou MP4)
   // Serviços frequentes (localStorage)
   const [frequentServices,setFrequentServices]=useState(()=>{
     try{return JSON.parse(localStorage.getItem("dcad_freq")||"[]");}catch{return[];}
@@ -329,7 +330,7 @@ export default function App() {
     if(screen==="dashboard"&&dentist){
       try{
         const seen=localStorage.getItem("dcad_tutorial_done")==="1";
-        if(!seen){setTimeout(()=>{setShowTutorial(true);setTutorialStep(0);},400);}
+        if(!seen){setTimeout(()=>{setScreen("tutorial");},400);}
       }catch{setShowTutorial(true);}
     }
   },[screen,dentist]);
@@ -776,55 +777,6 @@ input,textarea,select{touch-action:manipulation;}
           </div>
         </div>
       )}
-      {/* ── TUTORIAL DE ONBOARDING ── */}
-      {showTutorial&&(
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-          {(()=>{
-            const slides=[
-              {ico:"🦷",color:C.red,title:"Bem-vindo à D-CAD!",sub:"O maior centro de planejamento digital e impressão 3D para Odontologia do Brasil.",body:"Solicite guias cirúrgicos, próteses, planejamentos digitais e muito mais — com entrega para todo o Brasil.",tip:"👆 Use o botão 'Novo pedido' no dashboard para começar."},
-              {ico:"🔄",color:C.blue,title:"Como funciona o fluxo",sub:"Pedidos em 4 etapas simples.",body:"1. Selecione a especialidade → 2. Escolha o serviço → 3. Configure (dentes, marca, prazo) → 4. Finalize com pagamento. O planejamento começa logo após a confirmação.",tip:"📁 Tenha os arquivos clínicos prontos antes de iniciar (CBCT, escaneamento, etc.)."},
-              {ico:"📋",color:C.green,title:"Modalidades de serviço",sub:"Planejamento + Impressão 3D ou Somente Planejamento.",body:"Planejamento + Impressão 3D: D-CAD planeja e entrega peças impressas. Somente Planejamento: D-CAD envia os arquivos para você imprimir na sua impressora.",tip:"🖨 Cadastre sua impressora no perfil para agilizar pedidos de Somente Planejamento."},
-              {ico:"🚀",color:"#A855F7",title:"Pronto para começar!",sub:"Suporte disponível sempre que precisar.",body:"Nossa equipe está no WhatsApp para tirar dúvidas sobre casos, prazos e arquivos. Tempo médio de entrega do planejamento: 48-72h úteis.",tip:"💬 Fale com a D-CAD direto pelo botão de suporte no dashboard."},
-            ];
-            const sl=slides[tutorialStep];
-            const isLast=tutorialStep===slides.length-1;
-            const dismiss=()=>{setShowTutorial(false);if(tutorialNeverShow)try{localStorage.setItem("dcad_tutorial_done","1");}catch{}};
-            return(
-              <div onClick={e=>e.stopPropagation()} style={{background:C.dark2,border:`1px solid ${C.border2}`,borderRadius:16,padding:32,maxWidth:440,width:"100%",position:"relative"}}>
-                <button onClick={dismiss} aria-label="Pular tutorial" style={{position:"absolute",top:14,right:14,background:"none",border:"none",color:C.textSec,fontSize:12,cursor:"pointer",padding:"4px 8px",borderRadius:6}}>Pular</button>
-                <div style={{display:"flex",justifyContent:"center",marginBottom:18}}>
-                  <div style={{width:72,height:72,borderRadius:20,background:sl.color+"18",border:`1px solid ${sl.color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:34}}>{sl.ico}</div>
-                </div>
-                <div style={{display:"flex",gap:6,justifyContent:"center",marginBottom:20}}>
-                  {slides.map((_,i)=>(
-                    <div key={i} onClick={()=>setTutorialStep(i)} style={{height:4,width:i===tutorialStep?28:10,borderRadius:2,background:i===tutorialStep?sl.color:C.border2,transition:"all .2s",cursor:"pointer"}}/>
-                  ))}
-                </div>
-                <div style={{fontSize:20,fontWeight:800,textAlign:"center",marginBottom:6}}>{sl.title}</div>
-                <div style={{fontSize:13,color:sl.color,textAlign:"center",fontWeight:600,marginBottom:14}}>{sl.sub}</div>
-                <div style={{fontSize:13,color:C.textSec,lineHeight:1.7,textAlign:"center",marginBottom:14,whiteSpace:"pre-line"}}>{sl.body}</div>
-                <div style={{background:"rgba(255,255,255,0.04)",border:`1px solid ${C.border}`,borderRadius:8,padding:"10px 14px",fontSize:12,color:C.textSec,marginBottom:20,lineHeight:1.5}}>{sl.tip}</div>
-                {isLast&&(
-                  <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",marginBottom:16}}>
-                    <input type="checkbox" checked={tutorialNeverShow} onChange={e=>setTutorialNeverShow(e.target.checked)} style={{width:16,height:16,accentColor:C.red,cursor:"pointer"}}/>
-                    <span style={{fontSize:12,color:C.textSec}}>Não exibir mais o tutorial</span>
-                  </label>
-                )}
-                <div style={{display:"flex",gap:8}}>
-                  {tutorialStep>0&&(
-                    <button onClick={()=>setTutorialStep(t=>t-1)} style={{flex:1,padding:"11px 0",background:"none",border:`1px solid ${C.border2}`,borderRadius:12,color:C.textSec,fontSize:13,fontWeight:600,cursor:"pointer"}}>← Anterior</button>
-                  )}
-                  <button onClick={()=>{if(isLast){dismiss();}else{setTutorialStep(t=>t+1);}}}
-                    style={{flex:2,padding:"12px 0",background:sl.color,border:"none",borderRadius:12,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>
-                    {isLast?"Começar a usar →":"Próximo →"}
-                  </button>
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-      )}
-
       {/* ── PROTOCOLO WARNING MODAL (sem DSD 3D) ── */}
       {showProtoWarning&&(
         <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.85)",zIndex:70,display:"flex",alignItems:"center",justifyContent:"center",padding:20,minHeight:"100vh"}}>
@@ -1687,18 +1639,22 @@ input,textarea,select{touch-action:manipulation;}
                   {accountType==="dentista"&&<span style={{fontSize:12,fontWeight:700,background:C.dark3,color:C.textSec,padding:"3px 9px",borderRadius:16}}> Dentista</span>}
                 </div>
               </div>
-              <div style={{display:"flex",gap:8,flexShrink:0}}>
-                <button onClick={()=>{try{localStorage.removeItem("dcad_tutorial_done");}catch{}setShowTutorial(true);setTutorialStep(0);}}
-                  title="Ver tutorial"
-                  style={{background:C.dark2,border:`1px solid ${C.border2}`,borderRadius:12,padding:"11px 12px",color:C.textSec,fontSize:13,cursor:"pointer",whiteSpace:"nowrap"}}>
-                  🎓
-                </button>
-                <button onClick={()=>{setA({preplan:null,teeth:[],arch:{sup:false,inf:false},implantQty:null,dsd3dAddon:false,brand:null,kit:null,model:null,modelText:"",comps:{},observacoes:"",urgency:"normal",slicedFile:false,printerId:null});setSpecialty(null);setService(null);setServiceType(null);setSelectedGroup(null);setScreen("patient");}}
-                  style={{background:C.red,border:"none",borderRadius:12,padding:"11px 18px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>
-                  + Novo pedido
-                </button>
-              </div>
+              <button onClick={()=>{setA({preplan:null,teeth:[],arch:{sup:false,inf:false},implantQty:null,dsd3dAddon:false,brand:null,kit:null,model:null,modelText:"",comps:{},observacoes:"",urgency:"normal",slicedFile:false,printerId:null});setSpecialty(null);setService(null);setServiceType(null);setSelectedGroup(null);setScreen("patient");}}
+                style={{background:C.red,border:"none",borderRadius:12,padding:"11px 18px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>
+                + Novo pedido
+              </button>
             </div>
+
+            {/* Botão Tutorial do Sistema */}
+            <button onClick={()=>{try{localStorage.removeItem("dcad_tutorial_done");}catch{}setScreen("tutorial");}}
+              style={{width:"100%",marginBottom:20,display:"flex",alignItems:"center",gap:12,background:"linear-gradient(135deg,rgba(99,102,241,0.1) 0%,rgba(99,102,241,0.04) 100%)",border:`1px solid rgba(99,102,241,0.3)`,borderRadius:12,padding:"14px 18px",color:C.text,cursor:"pointer",textAlign:"left"}}>
+              <div style={{width:40,height:40,borderRadius:10,background:"rgba(99,102,241,0.15)",border:"1px solid rgba(99,102,241,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:20}}>🎓</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:14,fontWeight:700,color:C.blue,marginBottom:2}}>Tutorial do Sistema</div>
+                <div style={{fontSize:12,color:C.textSec,lineHeight:1.4}}>Aprenda a usar a plataforma D-CAD passo a passo — fluxo de pedidos, modalidades e dicas.</div>
+              </div>
+              <div style={{fontSize:18,color:C.blue,flexShrink:0}}>›</div>
+            </button>
 
             {/* Stats */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:24}}>
@@ -1967,6 +1923,293 @@ input,textarea,select{touch-action:manipulation;}
         {/* ════════════════════════════════
             PATIENT SCREEN
         ════════════════════════════════ */}
+
+        {screen==="tutorial"&&(
+          <div style={{maxWidth:680,margin:"0 auto",padding:"0 0 60px"}}>
+
+            {/* ── Header ── */}
+            <div style={{background:"linear-gradient(135deg,rgba(99,102,241,0.15) 0%,rgba(229,34,41,0.08) 100%)",border:`1px solid rgba(99,102,241,0.25)`,borderRadius:16,padding:"28px 28px 24px",marginBottom:28,position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",right:-20,top:-20,width:120,height:120,borderRadius:"50%",background:"rgba(99,102,241,0.08)"}}/>
+              <div style={{fontSize:12,fontWeight:700,color:C.blue,letterSpacing:.5,marginBottom:8}}>D-CAD DIGITAL SOLUTIONS</div>
+              <div style={{fontSize:26,fontWeight:900,marginBottom:8,lineHeight:1.2}}>Tutorial do Sistema</div>
+              <div style={{fontSize:14,color:C.textSec,lineHeight:1.6,marginBottom:20}}>Aprenda a solicitar planejamentos digitais e guias cirúrgicos em minutos. Siga o passo a passo abaixo.</div>
+              {TUTORIAL_VIDEO_URL&&(
+                <div style={{borderRadius:12,overflow:"hidden",marginBottom:16,background:"#000",position:"relative",paddingBottom:"56.25%"}}>
+                  {TUTORIAL_VIDEO_URL.includes("youtube")||TUTORIAL_VIDEO_URL.includes("youtu.be")
+                    ?<iframe src={TUTORIAL_VIDEO_URL.replace("watch?v=","embed/").replace("youtu.be/","youtube.com/embed/")}
+                        style={{position:"absolute",inset:0,width:"100%",height:"100%",border:"none"}}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen title="Tutorial D-CAD"/>
+                    :<video src={TUTORIAL_VIDEO_URL} controls style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover"}}/>
+                  }
+                </div>
+              )}
+              <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer"}}>
+                <input type="checkbox" checked={tutorialNeverShow} onChange={e=>setTutorialNeverShow(e.target.checked)}
+                  style={{width:16,height:16,accentColor:C.blue,cursor:"pointer"}}/>
+                <span style={{fontSize:12,color:C.textSec}}>Não exibir automaticamente ao entrar no sistema</span>
+              </label>
+            </div>
+
+            {/* ── Etapas ── */}
+            {[
+              {
+                n:1, color:C.blue, ico:"👤",
+                title:"Acesse sua conta",
+                desc:"Faça login com seu e-mail e senha cadastrados. Na primeira vez, clique em 'Criar conta' e preencha seus dados profissionais (CRO, clínica e WhatsApp para contato).",
+                tips:["Use o mesmo e-mail em todos os acessos","Guarde sua senha em local seguro","Em caso de esquecimento, entre em contato via WhatsApp"],
+                svg:(
+                  <svg viewBox="0 0 320 140" style={{width:"100%",borderRadius:10,display:"block"}}>
+                    <rect width="320" height="140" fill="#1a1a1a" rx="10"/>
+                    <rect x="40" y="20" width="240" height="100" fill="#242424" rx="8" stroke="rgba(255,255,255,0.07)" strokeWidth="1"/>
+                    <text x="160" y="48" textAnchor="middle" fill="#E52229" fontSize="11" fontWeight="700" fontFamily="system-ui">D-CAD DIGITAL SOLUTIONS</text>
+                    <rect x="80" y="58" width="160" height="22" fill="#2a2a2a" rx="5" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                    <text x="160" y="73" textAnchor="middle" fill="#666" fontSize="10" fontFamily="system-ui">E-mail</text>
+                    <rect x="80" y="86" width="160" height="22" fill="#2a2a2a" rx="5" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                    <text x="160" y="101" textAnchor="middle" fill="#666" fontSize="10" fontFamily="system-ui">Senha</text>
+                    <rect x="80" y="112" width="160" height="20" fill="#E52229" rx="5"/>
+                    <text x="160" y="125" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="system-ui">Entrar</text>
+                  </svg>
+                ),
+              },
+              {
+                n:2, color:"#A855F7", ico:"🦷",
+                title:"Informe os dados do paciente",
+                desc:"Após o login, clique em '+ Novo pedido'. Informe o nome completo e a data de nascimento do paciente. Você pode buscar pacientes já cadastrados ou criar um novo.",
+                tips:["Cada pedido é vinculado a um paciente","Pacientes anteriores ficam salvos para reutilização","O nome do paciente aparece no resumo do caso"],
+                svg:(
+                  <svg viewBox="0 0 320 140" style={{width:"100%",borderRadius:10,display:"block"}}>
+                    <rect width="320" height="140" fill="#1a1a1a" rx="10"/>
+                    <text x="16" y="30" fill="#A855F7" fontSize="11" fontWeight="700" fontFamily="system-ui">Dados do Paciente</text>
+                    <rect x="16" y="40" width="288" height="24" fill="#242424" rx="6" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
+                    <text x="28" y="56" fill="#666" fontSize="10" fontFamily="system-ui">Nome completo do paciente</text>
+                    <rect x="16" y="70" width="136" height="24" fill="#242424" rx="6" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
+                    <text x="28" y="86" fill="#666" fontSize="10" fontFamily="system-ui">Data de nascimento</text>
+                    <rect x="168" y="70" width="136" height="24" fill="#2a2a2a" rx="6" stroke="rgba(168,85,247,0.3)" strokeWidth="1"/>
+                    <text x="236" y="86" textAnchor="middle" fill="#a0a0a0" fontSize="10" fontFamily="system-ui">Maria das Graças</text>
+                    <rect x="16" y="104" width="288" height="26" fill="#A855F7" rx="6"/>
+                    <text x="160" y="121" textAnchor="middle" fill="#fff" fontSize="11" fontWeight="700" fontFamily="system-ui">Continuar →</text>
+                  </svg>
+                ),
+              },
+              {
+                n:3, color:C.teal, ico:"🏥",
+                title:"Selecione a especialidade",
+                desc:"Escolha a especialidade odontológica do serviço que você precisa. As especialidades disponíveis são Implantodontia, Dentística, Prótese, DTM, Estética e outras.",
+                tips:["Cada especialidade tem serviços específicos","Implantodontia v1.0 está completa e disponível","Outras especialidades serão adicionadas em breve"],
+                svg:(
+                  <svg viewBox="0 0 320 140" style={{width:"100%",borderRadius:10,display:"block"}}>
+                    <rect width="320" height="140" fill="#1a1a1a" rx="10"/>
+                    <text x="16" y="26" fill="#0D9488" fontSize="11" fontWeight="700" fontFamily="system-ui">Selecione a Especialidade</text>
+                    {[
+                      {x:16,y:34,c:"#E52229",t:"Implantodontia"},
+                      {x:90,y:34,c:"#6366f1",t:"Dentística"},
+                      {x:164,y:34,c:"#eab308",t:"Prótese"},
+                      {x:238,y:34,c:"#22c55e",t:"Periodontia"},
+                      {x:16,y:94,c:"#A855F7",t:"Endodontia"},
+                      {x:90,y:94,c:"#0D9488",t:"DTM"},
+                      {x:164,y:94,c:"#ea580c",t:"Estética"},
+                      {x:238,y:94,c:"#2563eb",t:"Cirurgia"},
+                    ].map((sp,i)=>(
+                      <g key={i}>
+                        <rect x={sp.x} y={sp.y} width="68" height="54" fill="#242424" rx="8"
+                          stroke={i===0?"rgba(229,34,41,0.6)":"rgba(255,255,255,0.07)"} strokeWidth={i===0?"1.5":"1"}/>
+                        <rect x={sp.x} y={sp.y} width="68" height="3" fill={sp.c} rx="2"/>
+                        <text x={sp.x+34} y={sp.y+34} textAnchor="middle" fill={sp.c} fontSize="18">
+                          {["🦷","✨","🦴","🌿","🔬","😤","💎","🔪"][i]}
+                        </text>
+                        <text x={sp.x+34} y={sp.y+50} textAnchor="middle" fill="#a0a0a0" fontSize="8" fontFamily="system-ui">{sp.t}</text>
+                      </g>
+                    ))}
+                  </svg>
+                ),
+              },
+              {
+                n:4, color:C.red, ico:"📋",
+                title:"Escolha o serviço e a modalidade",
+                desc:"Selecione o serviço desejado (ex: Cirurgia Guiada Unitária) e escolha a modalidade: Planejamento + Impressão 3D (D-CAD entrega as peças) ou Somente Planejamento (você recebe os arquivos para imprimir).",
+                tips:["Somente Planejamento requer impressora 3D cadastrada","O preço muda entre as modalidades","Serviços com ⚠ não oferecem Somente Planejamento"],
+                svg:(
+                  <svg viewBox="0 0 320 140" style={{width:"100%",borderRadius:10,display:"block"}}>
+                    <rect width="320" height="140" fill="#1a1a1a" rx="10"/>
+                    <rect x="16" y="16" width="288" height="64" fill="#242424" rx="8" stroke="rgba(229,34,41,0.3)" strokeWidth="1.5"/>
+                    <rect x="16" y="16" width="288" height="3" fill="#E52229" rx="2"/>
+                    <text x="32" y="40" fill="#fff" fontSize="12" fontWeight="700" fontFamily="system-ui">Cirurgia Guiada Unitária</text>
+                    <text x="32" y="56" fill="#a0a0a0" fontSize="10" fontFamily="system-ui">Guia para 1 implante · A partir de R$ 389</text>
+                    <rect x="28" y="64" width="80" height="10" fill="rgba(34,197,94,0.15)" rx="3" stroke="rgba(34,197,94,0.3)" strokeWidth="0.5"/>
+                    <text x="68" y="72" textAnchor="middle" fill="#22c55e" fontSize="8" fontFamily="system-ui">✓ Exames inclusos</text>
+                    <rect x="16" y="92" width="138" height="38" fill="#242424" rx="8" stroke="rgba(229,34,41,0.4)" strokeWidth="1.5"/>
+                    <text x="85" y="108" textAnchor="middle" fill="#E52229" fontSize="10" fontWeight="700" fontFamily="system-ui">🖨 Plan. + Impressão</text>
+                    <text x="85" y="122" textAnchor="middle" fill="#a0a0a0" fontSize="9" fontFamily="system-ui">D-CAD entrega as peças</text>
+                    <rect x="162" y="92" width="142" height="38" fill="#2a2a2a" rx="8" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                    <text x="233" y="108" textAnchor="middle" fill="#a0a0a0" fontSize="10" fontWeight="700" fontFamily="system-ui">📐 Só Planejamento</text>
+                    <text x="233" y="122" textAnchor="middle" fill="#666" fontSize="9" fontFamily="system-ui">Você imprime os arquivos</text>
+                  </svg>
+                ),
+              },
+              {
+                n:5, color:C.yellow, ico:"⚙️",
+                title:"Configure o caso clínico",
+                desc:"Preencha as informações clínicas: selecione os dentes no odontograma (ou arcadas no protocolo), escolha a marca do implante, o kit e o modelo. Em seguida, defina o prazo de entrega.",
+                tips:["O odontograma aceita até 8 implantes por arcada","A marca do implante filtra automaticamente kits e modelos","Urgente tem acréscimo de 40% sobre o valor base"],
+                svg:(
+                  <svg viewBox="0 0 320 140" style={{width:"100%",borderRadius:10,display:"block"}}>
+                    <rect width="320" height="140" fill="#1a1a1a" rx="10"/>
+                    <text x="16" y="24" fill="#eab308" fontSize="11" fontWeight="700" fontFamily="system-ui">Selecione os dentes</text>
+                    <g transform="translate(16,32)">
+                      {[...Array(16)].map((_,i)=>{
+                        const row=i<8?0:1;const col=i%8;
+                        const x=col*18;const y=row*22;
+                        const sel=[2,4,7].includes(i);
+                        return(
+                          <g key={i}>
+                            <rect x={x} y={y} width="16" height="18" fill={sel?"rgba(229,34,41,0.25)":"#2a2a2a"} rx="3"
+                              stroke={sel?"#E52229":"rgba(255,255,255,0.1)"} strokeWidth={sel?"1.5":"1"}/>
+                            <text x={x+8} y={y+12} textAnchor="middle" fill={sel?"#E52229":"#555"} fontSize="7" fontFamily="system-ui">
+                              {[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28][i]}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </g>
+                    <text x="16" y="92" fill="#eab308" fontSize="11" fontWeight="700" fontFamily="system-ui">Marca do implante</text>
+                    <rect x="16" y="98" width="288" height="22" fill="#242424" rx="6" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
+                    <text x="28" y="113" fill="#a0a0a0" fontSize="10" fontFamily="system-ui">Neodent · Grand Morse · Titamax</text>
+                    <rect x="272" y="100" width="24" height="18" fill="#E52229" rx="4"/>
+                    <text x="284" y="113" textAnchor="middle" fill="#fff" fontSize="12">▾</text>
+                  </svg>
+                ),
+              },
+              {
+                n:6, color:C.green, ico:"📦",
+                title:"Revise o pedido e finalize",
+                desc:"Na tela de Resumo do Caso, confira todos os serviços adicionados, os valores, o prazo e o tipo de frete. Você pode adicionar mais serviços ao mesmo pedido antes de finalizar.",
+                tips:["Você pode editar ou remover serviços antes de pagar","Múltiplos serviços podem ser enviados juntos","O desconto institucional é aplicado automaticamente"],
+                svg:(
+                  <svg viewBox="0 0 320 140" style={{width:"100%",borderRadius:10,display:"block"}}>
+                    <rect width="320" height="140" fill="#1a1a1a" rx="10"/>
+                    <text x="16" y="24" fill="#22c55e" fontSize="11" fontWeight="700" fontFamily="system-ui">Resumo do Caso</text>
+                    <rect x="16" y="30" width="288" height="44" fill="#242424" rx="8" stroke="rgba(255,255,255,0.07)" strokeWidth="1"/>
+                    <text x="28" y="48" fill="#fff" fontSize="11" fontWeight="600" fontFamily="system-ui">Cirurgia Guiada Unitária</text>
+                    <text x="28" y="62" fill="#a0a0a0" fontSize="10" fontFamily="system-ui">Dente 16 · Neodent · Grand Morse · Normal</text>
+                    <text x="290" y="56" textAnchor="end" fill="#E52229" fontSize="13" fontWeight="900" fontFamily="system-ui">R$ 389</text>
+                    <line x1="16" y1="80" x2="304" y2="80" stroke="rgba(255,255,255,0.07)" strokeWidth="1"/>
+                    <rect x="16" y="86" width="136" height="24" fill="#2a2a2a" rx="6" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                    <text x="84" y="102" textAnchor="middle" fill="#a0a0a0" fontSize="10" fontFamily="system-ui">+ Adicionar serviço</text>
+                    <rect x="160" y="86" width="144" height="24" fill="#E52229" rx="6"/>
+                    <text x="232" y="102" textAnchor="middle" fill="#fff" fontSize="11" fontWeight="700" fontFamily="system-ui">Finalizar pedido →</text>
+                    <text x="16" y="130" fill="#22c55e" fontSize="10" fontFamily="system-ui">✓ Total: R$ 389,00 · Frete: A calcular</text>
+                  </svg>
+                ),
+              },
+              {
+                n:7, color:"#0D9488", ico:"📁",
+                title:"Envie os arquivos clínicos",
+                desc:"Após o pagamento, você receberá instruções para enviar os arquivos clínicos: tomografia (DICOM/CBCT), escaneamento intraoral (STL), e outros exames conforme o serviço. O planejamento começa após o recebimento e validação dos arquivos.",
+                tips:["CBCT obrigatório para cirurgia guiada (fatias ≤0.4mm)","Escaneamento intraoral substitui modelos de gesso","Dúvidas sobre arquivos: WhatsApp (98) 98542-5982"],
+                svg:(
+                  <svg viewBox="0 0 320 140" style={{width:"100%",borderRadius:10,display:"block"}}>
+                    <rect width="320" height="140" fill="#1a1a1a" rx="10"/>
+                    <text x="16" y="24" fill="#0D9488" fontSize="11" fontWeight="700" fontFamily="system-ui">Arquivos necessários</text>
+                    {[
+                      {ico:"🧠",label:"CBCT / Tomografia",sub:"Formato DICOM · Fatias ≤0.4mm",req:true},
+                      {ico:"🦷",label:"Escaneamento Intraoral",sub:"Formato STL ou OBJ",req:true},
+                      {ico:"📋",label:"Prescrição clínica",sub:"Posição, angulação, emergência",req:false},
+                    ].map((f,i)=>(
+                      <g key={i} transform={`translate(16,${32+i*34})`}>
+                        <rect width="288" height="28" fill="#242424" rx="6" stroke="rgba(255,255,255,0.07)" strokeWidth="1"/>
+                        <text x="14" y="18" fill="#fff" fontSize="14">{f.ico}</text>
+                        <text x="36" y="14" fill="#e0e0e0" fontSize="10" fontWeight="600" fontFamily="system-ui">{f.label}</text>
+                        <text x="36" y="24" fill="#666" fontSize="9" fontFamily="system-ui">{f.sub}</text>
+                        <text x="272" y="18" textAnchor="end" fill={f.req?"#E52229":"#22c55e"} fontSize="9" fontWeight="700" fontFamily="system-ui">{f.req?"Obrigatório":"Opcional"}</text>
+                      </g>
+                    ))}
+                  </svg>
+                ),
+              },
+              {
+                n:8, color:C.blue, ico:"🚀",
+                title:"Acompanhe o planejamento",
+                desc:"Após o envio dos arquivos, nossa equipe inicia o planejamento. Você recebe atualizações por WhatsApp e pode acompanhar o status no dashboard. O prazo começa a contar a partir da validação dos arquivos.",
+                tips:["Tempo médio de planejamento: 48-72h úteis","Aprovação obrigatória antes da impressão","Suporte por WhatsApp em horário comercial"],
+                svg:(
+                  <svg viewBox="0 0 320 140" style={{width:"100%",borderRadius:10,display:"block"}}>
+                    <rect width="320" height="140" fill="#1a1a1a" rx="10"/>
+                    <text x="16" y="24" fill="#6366f1" fontSize="11" fontWeight="700" fontFamily="system-ui">Status do pedido #001</text>
+                    <g transform="translate(16,36)">
+                      {[
+                        {label:"Recebido",done:true,active:false},
+                        {label:"Planejamento",done:false,active:true},
+                        {label:"Impressão",done:false,active:false},
+                        {label:"Enviado",done:false,active:false},
+                        {label:"Entregue",done:false,active:false},
+                      ].map((st,i)=>(
+                        <g key={i}>
+                          <circle cx={i*72} cy="18" r="10"
+                            fill={st.done?"#22c55e":st.active?"#6366f1":"#2a2a2a"}
+                            stroke={st.done?"rgba(34,197,94,0.4)":st.active?"rgba(99,102,241,0.6)":"rgba(255,255,255,0.1)"} strokeWidth="1.5"/>
+                          <text x={i*72} y="23" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700">{st.done?"✓":i+1}</text>
+                          <text x={i*72} y="42" textAnchor="middle" fill={st.active?"#6366f1":"#555"} fontSize="8" fontFamily="system-ui">{st.label}</text>
+                          {i<4&&<line x1={i*72+11} y1="18" x2={i*72+61} y2="18" stroke={st.done?"#22c55e":"rgba(255,255,255,0.1)"} strokeWidth="1.5" strokeDasharray={st.done?"0":"4 3"}/>}
+                        </g>
+                      ))}
+                    </g>
+                    <rect x="16" y="96" width="288" height="34" fill="#242424" rx="8" stroke="rgba(99,102,241,0.2)" strokeWidth="1"/>
+                    <text x="28" y="110" fill="#6366f1" fontSize="10" fontWeight="700" fontFamily="system-ui">🔵 Em planejamento</text>
+                    <text x="28" y="123" fill="#a0a0a0" fontSize="10" fontFamily="system-ui">Previsão de conclusão: 48h úteis · Cirurgia Guiada Unitária</text>
+                  </svg>
+                ),
+              },
+            ].map((step,idx)=>(
+              <div key={idx} style={{marginBottom:24,background:C.dark2,border:`1px solid ${C.border}`,borderRadius:16,overflow:"hidden"}}>
+                {/* Header da etapa */}
+                <div style={{padding:"16px 20px 14px",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:12}}>
+                  <div style={{width:36,height:36,borderRadius:10,background:step.color+"18",border:`1px solid ${step.color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>
+                    {step.ico}
+                  </div>
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:step.color,letterSpacing:.5,marginBottom:2}}>ETAPA {step.n}</div>
+                    <div style={{fontSize:15,fontWeight:800,lineHeight:1.2}}>{step.title}</div>
+                  </div>
+                </div>
+                {/* Ilustração SVG */}
+                <div style={{padding:"16px 20px 0"}}>{step.svg}</div>
+                {/* Descrição */}
+                <div style={{padding:"14px 20px",fontSize:13,color:C.textSec,lineHeight:1.7}}>{step.desc}</div>
+                {/* Dicas */}
+                <div style={{margin:"0 20px 16px",background:"rgba(255,255,255,0.03)",border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 14px"}}>
+                  <div style={{fontSize:11,fontWeight:700,color:step.color,marginBottom:6,letterSpacing:.3}}>💡 DICAS</div>
+                  {step.tips.map((tip,ti)=>(
+                    <div key={ti} style={{fontSize:12,color:C.textSec,display:"flex",alignItems:"flex-start",gap:6,marginBottom:ti<step.tips.length-1?4:0}}>
+                      <span style={{color:step.color,flexShrink:0}}>·</span>{tip}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {/* ── Footer ── */}
+            <div style={{background:`linear-gradient(135deg,rgba(229,34,41,0.08) 0%,rgba(99,102,241,0.06) 100%)`,border:`1px solid ${C.border}`,borderRadius:16,padding:"20px 24px",textAlign:"center",marginBottom:20}}>
+              <div style={{fontSize:16,fontWeight:800,marginBottom:6}}>Dúvidas? Fale com a D-CAD</div>
+              <div style={{fontSize:13,color:C.textSec,marginBottom:16}}>Nossa equipe está disponível em horário comercial para ajudar com casos, arquivos e prazos.</div>
+              <a href="https://wa.me/5598985425982" target="_blank" rel="noopener noreferrer"
+                style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(34,197,94,0.12)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:12,padding:"11px 20px",color:C.green,fontSize:14,fontWeight:700,textDecoration:"none"}}>
+                💬 WhatsApp (98) 98542-5982
+              </a>
+            </div>
+
+            {/* Botão voltar + salvar preferência */}
+            <div style={{display:"flex",gap:10,alignItems:"center"}}>
+              <button onClick={()=>{
+                if(tutorialNeverShow)try{localStorage.setItem("dcad_tutorial_done","1");}catch{}
+                setScreen("dashboard");
+              }} style={{flex:1,padding:"13px 0",background:C.red,border:"none",borderRadius:12,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>
+                ← Voltar ao Dashboard
+              </button>
+            </div>
+          </div>
+        )}
+
         {screen==="patient"&&(
           <div style={{maxWidth:560,margin:"0 auto",paddingTop:isDesktop?32:8}}>
             <button onClick={()=>setScreen("dashboard")} style={{display:"flex",alignItems:"center",gap:8,background:"none",border:"none",color:C.textSec,fontSize:13,cursor:"pointer",padding:"0 0 16px 0",fontFamily:"inherit"}}>

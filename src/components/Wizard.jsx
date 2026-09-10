@@ -310,10 +310,7 @@ export default function App() {
   const [frequentServices,setFrequentServices]=useState(()=>{
     try{return JSON.parse(localStorage.getItem("dcad_freq")||"[]");}catch{return[];}
   });
-  // Carrossel de novidades
-  const [announcementDismissed,setAnnouncementDismissed]=useState(()=>{
-    try{return localStorage.getItem("dcad_ann_dismissed")==="1";}catch{return false;}
-  });
+  // Carrossel de novidades — sempre visível
   const [carouselIdx,setCarouselIdx]=useState(0);
   const [carouselPaused,setCarouselPaused]=useState(false);
   const [editingId,setEditingId]=useState(null); // id of service being edited
@@ -365,7 +362,7 @@ export default function App() {
     },
   ];
   useEffect(()=>{
-    if(announcementDismissed||carouselPaused||ANNOUNCEMENTS.length<=1) return;
+    if(carouselPaused||ANNOUNCEMENTS.length<=1) return;
     const t=setInterval(()=>setCarouselIdx(i=>(i+1)%ANNOUNCEMENTS.length),4000);
     return()=>clearInterval(t);
   },[announcementDismissed,carouselPaused]);
@@ -779,6 +776,55 @@ input,textarea,select{touch-action:manipulation;}
           </div>
         </div>
       )}
+      {/* ── TUTORIAL DE ONBOARDING ── */}
+      {showTutorial&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+          {(()=>{
+            const slides=[
+              {ico:"🦷",color:C.red,title:"Bem-vindo à D-CAD!",sub:"O maior centro de planejamento digital e impressão 3D para Odontologia do Brasil.",body:"Solicite guias cirúrgicos, próteses, planejamentos digitais e muito mais — com entrega para todo o Brasil.",tip:"👆 Use o botão 'Novo pedido' no dashboard para começar."},
+              {ico:"🔄",color:C.blue,title:"Como funciona o fluxo",sub:"Pedidos em 4 etapas simples.",body:"1. Selecione a especialidade → 2. Escolha o serviço → 3. Configure (dentes, marca, prazo) → 4. Finalize com pagamento. O planejamento começa logo após a confirmação.",tip:"📁 Tenha os arquivos clínicos prontos antes de iniciar (CBCT, escaneamento, etc.)."},
+              {ico:"📋",color:C.green,title:"Modalidades de serviço",sub:"Planejamento + Impressão 3D ou Somente Planejamento.",body:"Planejamento + Impressão 3D: D-CAD planeja e entrega peças impressas. Somente Planejamento: D-CAD envia os arquivos para você imprimir na sua impressora.",tip:"🖨 Cadastre sua impressora no perfil para agilizar pedidos de Somente Planejamento."},
+              {ico:"🚀",color:"#A855F7",title:"Pronto para começar!",sub:"Suporte disponível sempre que precisar.",body:"Nossa equipe está no WhatsApp para tirar dúvidas sobre casos, prazos e arquivos. Tempo médio de entrega do planejamento: 48-72h úteis.",tip:"💬 Fale com a D-CAD direto pelo botão de suporte no dashboard."},
+            ];
+            const sl=slides[tutorialStep];
+            const isLast=tutorialStep===slides.length-1;
+            const dismiss=()=>{setShowTutorial(false);if(tutorialNeverShow)try{localStorage.setItem("dcad_tutorial_done","1");}catch{}};
+            return(
+              <div onClick={e=>e.stopPropagation()} style={{background:C.dark2,border:`1px solid ${C.border2}`,borderRadius:16,padding:32,maxWidth:440,width:"100%",position:"relative"}}>
+                <button onClick={dismiss} aria-label="Pular tutorial" style={{position:"absolute",top:14,right:14,background:"none",border:"none",color:C.textSec,fontSize:12,cursor:"pointer",padding:"4px 8px",borderRadius:6}}>Pular</button>
+                <div style={{display:"flex",justifyContent:"center",marginBottom:18}}>
+                  <div style={{width:72,height:72,borderRadius:20,background:sl.color+"18",border:`1px solid ${sl.color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:34}}>{sl.ico}</div>
+                </div>
+                <div style={{display:"flex",gap:6,justifyContent:"center",marginBottom:20}}>
+                  {slides.map((_,i)=>(
+                    <div key={i} onClick={()=>setTutorialStep(i)} style={{height:4,width:i===tutorialStep?28:10,borderRadius:2,background:i===tutorialStep?sl.color:C.border2,transition:"all .2s",cursor:"pointer"}}/>
+                  ))}
+                </div>
+                <div style={{fontSize:20,fontWeight:800,textAlign:"center",marginBottom:6}}>{sl.title}</div>
+                <div style={{fontSize:13,color:sl.color,textAlign:"center",fontWeight:600,marginBottom:14}}>{sl.sub}</div>
+                <div style={{fontSize:13,color:C.textSec,lineHeight:1.7,textAlign:"center",marginBottom:14,whiteSpace:"pre-line"}}>{sl.body}</div>
+                <div style={{background:"rgba(255,255,255,0.04)",border:`1px solid ${C.border}`,borderRadius:8,padding:"10px 14px",fontSize:12,color:C.textSec,marginBottom:20,lineHeight:1.5}}>{sl.tip}</div>
+                {isLast&&(
+                  <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",marginBottom:16}}>
+                    <input type="checkbox" checked={tutorialNeverShow} onChange={e=>setTutorialNeverShow(e.target.checked)} style={{width:16,height:16,accentColor:C.red,cursor:"pointer"}}/>
+                    <span style={{fontSize:12,color:C.textSec}}>Não exibir mais o tutorial</span>
+                  </label>
+                )}
+                <div style={{display:"flex",gap:8}}>
+                  {tutorialStep>0&&(
+                    <button onClick={()=>setTutorialStep(t=>t-1)} style={{flex:1,padding:"11px 0",background:"none",border:`1px solid ${C.border2}`,borderRadius:12,color:C.textSec,fontSize:13,fontWeight:600,cursor:"pointer"}}>← Anterior</button>
+                  )}
+                  <button onClick={()=>{if(isLast){dismiss();}else{setTutorialStep(t=>t+1);}}}
+                    style={{flex:2,padding:"12px 0",background:sl.color,border:"none",borderRadius:12,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>
+                    {isLast?"Começar a usar →":"Próximo →"}
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
       {/* ── PROTOCOLO WARNING MODAL (sem DSD 3D) ── */}
       {showProtoWarning&&(
         <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.85)",zIndex:70,display:"flex",alignItems:"center",justifyContent:"center",padding:20,minHeight:"100vh"}}>
@@ -1574,7 +1620,7 @@ input,textarea,select{touch-action:manipulation;}
         {screen==="dashboard"&&(
           <div style={{width:"100%"}}>
             {/* Carrossel de novidades D-CAD */}
-            {!announcementDismissed&&(()=>{
+            {(()=>{
               const ann=ANNOUNCEMENTS[carouselIdx];
               return(
                 <div
@@ -1593,9 +1639,7 @@ input,textarea,select{touch-action:manipulation;}
                       <span style={{fontSize:11,fontWeight:700,background:ann.badgeColor+"22",color:ann.badgeColor,border:`1px solid ${ann.badgeColor}44`,padding:"2px 10px",borderRadius:20}}>
                         {ann.badge}
                       </span>
-                      <button onClick={()=>{setAnnouncementDismissed(true);try{localStorage.setItem("dcad_ann_dismissed","1");}catch{}}}
-                        aria-label="Fechar novidades"
-                        style={{background:"none",border:"none",color:C.textSec,fontSize:16,cursor:"pointer",padding:"2px 6px",lineHeight:1,borderRadius:6,opacity:.7}}>✕</button>
+
                     </div>
                     {/* Título */}
                     <div style={{fontSize:16,fontWeight:800,color:C.text,marginBottom:6,lineHeight:1.3}}>{ann.title}</div>
@@ -1629,7 +1673,8 @@ input,textarea,select{touch-action:manipulation;}
                   </div>
                 </div>
               );
-            })()}
+            })()
+            }
 
             {/* Boas-vindas */}
             <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:24,gap:12}}>

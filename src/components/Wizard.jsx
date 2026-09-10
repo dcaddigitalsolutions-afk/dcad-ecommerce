@@ -365,7 +365,7 @@ export default function App() {
     if(carouselPaused||ANNOUNCEMENTS.length<=1) return;
     const t=setInterval(()=>setCarouselIdx(i=>(i+1)%ANNOUNCEMENTS.length),4000);
     return()=>clearInterval(t);
-  },[announcementDismissed,carouselPaused]);
+  },[carouselPaused]);
 
   // Registrar serviço frequente ao adicionar ao carrinho
   function trackFrequentService(sv){

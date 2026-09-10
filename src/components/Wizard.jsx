@@ -310,10 +310,12 @@ export default function App() {
   const [frequentServices,setFrequentServices]=useState(()=>{
     try{return JSON.parse(localStorage.getItem("dcad_freq")||"[]");}catch{return[];}
   });
-  // Banner de novidades
+  // Carrossel de novidades
   const [announcementDismissed,setAnnouncementDismissed]=useState(()=>{
     try{return localStorage.getItem("dcad_ann_dismissed")==="1";}catch{return false;}
   });
+  const [carouselIdx,setCarouselIdx]=useState(0);
+  const [carouselPaused,setCarouselPaused]=useState(false);
   const [editingId,setEditingId]=useState(null); // id of service being edited
   const [editingOriginal,setEditingOriginal]=useState(null); // original service snapshot for cancel
   const [showPass,setShowPass]=useState(false);
@@ -328,10 +330,45 @@ export default function App() {
   // Mostrar tutorial no primeiro login
   useEffect(()=>{
     if(screen==="dashboard"&&dentist){
-      const seen=localStorage.getItem("dcad_tutorial_done")==="1";
-      if(!seen){setShowTutorial(true);setTutorialStep(0);}
+      try{
+        const seen=localStorage.getItem("dcad_tutorial_done")==="1";
+        if(!seen){setTimeout(()=>{setShowTutorial(true);setTutorialStep(0);},400);}
+      }catch{setShowTutorial(true);}
     }
   },[screen,dentist]);
+
+  // Carrossel — avançar automaticamente a cada 4s
+  const ANNOUNCEMENTS=[
+    {
+      id:"implanto-v1",
+      title:"Implantodontia v1.0 — Completo!",
+      body:"Cirurgia Guiada Unitária, Parcial, Protocolos Edêntulos e Stackable Guide disponíveis agora.",
+      badge:"Novo",
+      badgeColor:C.red,
+      bg:"linear-gradient(135deg, rgba(229,34,41,0.15) 0%, rgba(99,102,241,0.08) 100%)",
+      borderColor:"rgba(229,34,41,0.3)",
+      link:"",
+      linkLabel:"",
+      imageUrl:"",
+    },
+    {
+      id:"prazo-entrega",
+      title:"Prazo reduzido para guias cirúrgicos",
+      body:"Agora entregamos guias cirúrgicos em até 5 dias úteis para todo o Brasil. Peça com urgência em até 48h.",
+      badge:"Info",
+      badgeColor:C.blue,
+      bg:"linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(13,148,136,0.06) 100%)",
+      borderColor:"rgba(99,102,241,0.28)",
+      link:"https://wa.me/5598985425982",
+      linkLabel:"Falar com a equipe →",
+      imageUrl:"",
+    },
+  ];
+  useEffect(()=>{
+    if(announcementDismissed||carouselPaused||ANNOUNCEMENTS.length<=1) return;
+    const t=setInterval(()=>setCarouselIdx(i=>(i+1)%ANNOUNCEMENTS.length),4000);
+    return()=>clearInterval(t);
+  },[announcementDismissed,carouselPaused]);
 
   // Registrar serviço frequente ao adicionar ao carrinho
   function trackFrequentService(sv){
@@ -471,6 +508,7 @@ export default function App() {
     const svcName=service?.name||(specialty?.name+" — Serviço");
     const svc={id:editingId||Date.now(),specialty:specialty?.name,name:svcName+(A.teeth.length>1?" (2 dentes)":""),teeth:[...A.teeth],arch:{...A.arch},implantQty:A.implantQty,dsd3dAddon:A.dsd3dAddon,brand:A.brand,kit:A.kit,model:A.model||(A.modelText||"Não especificado"),comps:{...A.comps},observacoes:A.observacoes,urgency:A.urgency,slicedFile:A.slicedFile,printerId:A.printerId||null,serviceType,freight:freightVal>0?{...freight}:null,total:calcTotal(A)+freightVal};
     setServices(s=>[...s,svc]);
+    if(service){trackFrequentService({...service,specialty:specialty?.name,specialtyColor:specialty?.color});}
     setEditingId(null);
     setEditingOriginal(null);
     if(specialty?.id && A.brand){
@@ -1535,19 +1573,63 @@ input,textarea,select{touch-action:manipulation;}
         ════════════════════════════════ */}
         {screen==="dashboard"&&(
           <div style={{width:"100%"}}>
-            {/* Banner de novidades D-CAD */}
-            {!announcementDismissed&&(
-              <div style={{background:"rgba(229,34,41,0.06)",border:"1px solid rgba(229,34,41,0.2)",borderRadius:12,padding:"12px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:12}}>
-                <div style={{fontSize:20,flexShrink:0}}>🔴</div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:700,color:C.red,marginBottom:2}}>Novidade D-CAD</div>
-                  <div style={{fontSize:12,color:C.textSec,lineHeight:1.5}}>Implantodontia v1.0 completa! Cirurgia Guiada, Protocolos e Stackable Guide disponíveis. Confira os novos fluxos.</div>
+            {/* Carrossel de novidades D-CAD */}
+            {!announcementDismissed&&(()=>{
+              const ann=ANNOUNCEMENTS[carouselIdx];
+              return(
+                <div
+                  onMouseEnter={()=>setCarouselPaused(true)}
+                  onMouseLeave={()=>setCarouselPaused(false)}
+                  style={{position:"relative",borderRadius:12,border:`1px solid ${ann.borderColor}`,marginBottom:20,overflow:"hidden",background:ann.bg,transition:"border-color .3s"}}>
+                  {/* Imagem de fundo */}
+                  {ann.imageUrl&&(
+                    <img src={ann.imageUrl} alt="" aria-hidden="true"
+                      style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",opacity:.18,pointerEvents:"none"}}
+                      onError={e=>{e.target.style.display="none";}}/>
+                  )}
+                  <div style={{position:"relative",padding:"18px 20px"}}>
+                    {/* Topo: badge + fechar */}
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                      <span style={{fontSize:11,fontWeight:700,background:ann.badgeColor+"22",color:ann.badgeColor,border:`1px solid ${ann.badgeColor}44`,padding:"2px 10px",borderRadius:20}}>
+                        {ann.badge}
+                      </span>
+                      <button onClick={()=>{setAnnouncementDismissed(true);try{localStorage.setItem("dcad_ann_dismissed","1");}catch{}}}
+                        aria-label="Fechar novidades"
+                        style={{background:"none",border:"none",color:C.textSec,fontSize:16,cursor:"pointer",padding:"2px 6px",lineHeight:1,borderRadius:6,opacity:.7}}>✕</button>
+                    </div>
+                    {/* Título */}
+                    <div style={{fontSize:16,fontWeight:800,color:C.text,marginBottom:6,lineHeight:1.3}}>{ann.title}</div>
+                    {/* Corpo */}
+                    <div style={{fontSize:13,color:C.textSec,lineHeight:1.6,marginBottom:ann.link?12:0}}>{ann.body}</div>
+                    {/* Link */}
+                    {ann.link&&(
+                      <a href={ann.link} target="_blank" rel="noopener noreferrer"
+                        style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:13,fontWeight:700,color:ann.badgeColor,textDecoration:"none",background:ann.badgeColor+"14",border:`1px solid ${ann.badgeColor}33`,borderRadius:8,padding:"5px 12px"}}>
+                        {ann.linkLabel||"Saiba mais →"}
+                      </a>
+                    )}
+                    {/* Paginação */}
+                    {ANNOUNCEMENTS.length>1&&(
+                      <div style={{display:"flex",gap:6,alignItems:"center",marginTop:14}}>
+                        {ANNOUNCEMENTS.map((_,i)=>(
+                          <button key={i} onClick={()=>{setCarouselIdx(i);setCarouselPaused(true);}}
+                            aria-label={`Slide ${i+1}`}
+                            style={{width:i===carouselIdx?22:8,height:8,borderRadius:4,background:i===carouselIdx?ann.badgeColor:"rgba(255,255,255,0.15)",border:"none",cursor:"pointer",transition:"all .25s",padding:0}}/>
+                        ))}
+                        <span style={{fontSize:11,color:C.textSec,marginLeft:4}}>{carouselIdx+1} / {ANNOUNCEMENTS.length}</span>
+                        {/* Prev/Next */}
+                        <div style={{marginLeft:"auto",display:"flex",gap:6}}>
+                          <button onClick={()=>{setCarouselIdx(i=>(i-1+ANNOUNCEMENTS.length)%ANNOUNCEMENTS.length);setCarouselPaused(true);}}
+                            style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${C.border}`,borderRadius:6,width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:C.textSec,fontSize:12}}>‹</button>
+                          <button onClick={()=>{setCarouselIdx(i=>(i+1)%ANNOUNCEMENTS.length);setCarouselPaused(true);}}
+                            style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${C.border}`,borderRadius:6,width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:C.textSec,fontSize:12}}>›</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <button onClick={()=>{setAnnouncementDismissed(true);try{localStorage.setItem("dcad_ann_dismissed","1");}catch{}}}
-                  aria-label="Fechar aviso"
-                  style={{background:"none",border:"none",color:C.textSec,fontSize:16,cursor:"pointer",padding:4,flexShrink:0}}>✕</button>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Boas-vindas */}
             <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:24,gap:12}}>
@@ -1561,7 +1643,7 @@ input,textarea,select{touch-action:manipulation;}
                 </div>
               </div>
               <div style={{display:"flex",gap:8,flexShrink:0}}>
-                <button onClick={()=>{setShowTutorial(true);setTutorialStep(0);}}
+                <button onClick={()=>{try{localStorage.removeItem("dcad_tutorial_done");}catch{}setShowTutorial(true);setTutorialStep(0);}}
                   title="Ver tutorial"
                   style={{background:C.dark2,border:`1px solid ${C.border2}`,borderRadius:12,padding:"11px 12px",color:C.textSec,fontSize:13,cursor:"pointer",whiteSpace:"nowrap"}}>
                   🎓

@@ -214,6 +214,7 @@ code{background:var(--s3);padding:1px 5px;border-radius:3px;font-size:12px;font-
   <div class="logo">D-CAD</div><div class="sep"></div>
   <div class="crumb">Portal Interno › <b>Catálogo de Serviços</b></div>
   <div class="bar-r">
+    <button class="btn bg" onclick="openCarousel()">📢 Carrossel</button>
     <button class="btn bg" onclick="openSpecManager()">🎓 Especialidades</button>
     <button class="btn bg" onclick="openMem()">💡 Biblioteca</button>
     <button class="btn bg" onclick="openExport()">⬇ Exportar</button>
@@ -432,6 +433,129 @@ const IMPLANT_TABLE={
 
 // ─── UTILITIES ────────────────────────────────────────────────────────────────
 const debounce=(fn,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);}};
+
+
+// ─── CAROUSEL EDITOR ──────────────────────────────────────────────────────────
+let carSlides = JSON.parse(localStorage.getItem('dcad_carousel') || 'null') || [
+  {id:'s1',title:'Implantodontia v1.0 — Completo!',body:'Cirurgia Guiada Unitária, Parcial, Protocolos Edêntulos e Stackable Guide disponíveis agora.',badge:'Novo',badgeColor:'#E52229',bg:'linear-gradient(135deg,rgba(229,34,41,0.15) 0%,rgba(99,102,241,0.08) 100%)',borderColor:'rgba(229,34,41,0.3)',link:'',linkLabel:'',imageUrl:''},
+  {id:'s2',title:'Prazo reduzido para guias cirúrgicos',body:'Entregamos guias cirúrgicos em até 5 dias úteis para todo o Brasil. Urgência em até 48h.',badge:'Info',badgeColor:'#6366f1',bg:'linear-gradient(135deg,rgba(99,102,241,0.12) 0%,rgba(13,148,136,0.06) 100%)',borderColor:'rgba(99,102,241,0.28)',link:'https://wa.me/5598985425982',linkLabel:'Falar com a equipe →',imageUrl:''},
+];
+let carSelIdx = null;
+
+function openCarousel(){
+  renderCarSlideList();
+  if(carSlides.length>0){selectCarSlide(0);}
+  document.getElementById('car-ov').style.display='flex';
+}
+
+function renderCarSlideList(){
+  const el=document.getElementById('car-slide-list');
+  el.innerHTML=carSlides.map((s,i)=>`
+    <div onclick="selectCarSlide(${i})" id="car-li-${i}"
+      style="padding:8px 10px;border-radius:var(--r2);border:1px solid ${i===carSelIdx?'var(--blu)':'var(--bd)'};
+             background:${i===carSelIdx?'var(--bdim)':'var(--s2)'};cursor:pointer;display:flex;align-items:center;gap:8px">
+      <div style="width:10px;height:10px;border-radius:50%;background:${s.badgeColor||'#fff'};flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.title||'Slide sem título'}</div>
+        <div style="font-size:10px;color:var(--tx3)">${s.badge||'—'}</div>
+      </div>
+      <button onclick="event.stopPropagation();deleteCarSlide(${i})" style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px" aria-label="Excluir slide">✕</button>
+    </div>`).join('');
+}
+
+function selectCarSlide(i){
+  carSelIdx=i;
+  renderCarSlideList();
+  renderCarSlideEditor(i);
+  renderCarPreview(i);
+}
+
+function renderCarSlideEditor(i){
+  const s=carSlides[i];
+  if(!s) return;
+  document.getElementById('car-slide-editor').innerHTML=`
+    <div class="fg g2">
+      <div class="f s2"><label>Título</label><input type="text" id="cse-title" value="${esc(s.title)}" oninput="updateCarSlide(${i},'title',this.value)"></div>
+      <div class="f s2"><label>Texto do corpo</label><textarea id="cse-body" oninput="updateCarSlide(${i},'body',this.value)" style="min-height:70px">${esc(s.body)}</textarea></div>
+      <div class="f"><label>Texto do badge</label><input type="text" id="cse-badge" value="${esc(s.badge)}" oninput="updateCarSlide(${i},'badge',this.value)" placeholder="Novo, Info, Promo…"></div>
+      <div class="f"><label>Cor do badge</label><input type="color" id="cse-bcolor" value="${s.badgeColor||'#E52229'}" oninput="updateCarSlide(${i},'badgeColor',this.value)" style="height:38px;padding:4px"></div>
+      <div class="f s2"><label>URL da imagem de fundo <span style="font-weight:400;color:var(--tx3)">(opcional)</span></label>
+        <input type="text" id="cse-img" value="${esc(s.imageUrl||'')}" oninput="updateCarSlide(${i},'imageUrl',this.value)" placeholder="https://…">
+        ${s.imageUrl?`<img src="${esc(s.imageUrl)}" style="margin-top:6px;width:100%;max-height:80px;object-fit:cover;border-radius:var(--r2);opacity:.8" onerror="this.style.display='none'">`:''}</div>
+      <div class="f s2"><label>Background CSS <span style="font-weight:400;color:var(--tx3)">(gradiente ou cor)</span></label>
+        <input type="text" id="cse-bg" value="${esc(s.bg||'')}" oninput="updateCarSlide(${i},'bg',this.value)" placeholder="linear-gradient(…) ou rgba(…)" style="font-family:monospace;font-size:11px"></div>
+      <div class="f s2"><label>Cor da borda</label>
+        <input type="text" id="cse-border" value="${esc(s.borderColor||'')}" oninput="updateCarSlide(${i},'borderColor',this.value)" placeholder="rgba(229,34,41,0.3)" style="font-family:monospace;font-size:11px"></div>
+      <div class="f"><label>URL do link <span style="font-weight:400;color:var(--tx3)">(opcional)</span></label>
+        <input type="text" id="cse-link" value="${esc(s.link||'')}" oninput="updateCarSlide(${i},'link',this.value)" placeholder="https:// ou https://wa.me/…"></div>
+      <div class="f"><label>Texto do botão de link</label>
+        <input type="text" id="cse-linklabel" value="${esc(s.linkLabel||'')}" oninput="updateCarSlide(${i},'linkLabel',this.value)" placeholder="Saiba mais →"></div>
+    </div>`;
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+
+function updateCarSlide(i,field,val){
+  if(!carSlides[i]) return;
+  carSlides[i][field]=val;
+  renderCarPreview(i);
+  // Re-render image preview if imageUrl changed
+  if(field==='imageUrl'){
+    const wrap=document.querySelector('#car-slide-editor .f.s2:nth-child(5)');
+    const existing=document.querySelector('#car-slide-editor img');
+    if(existing) existing.remove();
+    if(val){
+      const img=document.createElement('img');
+      img.src=val;
+      img.style='margin-top:6px;width:100%;max-height:80px;object-fit:cover;border-radius:var(--r2);opacity:.8';
+      img.onerror=()=>img.remove();
+      document.getElementById('cse-img')?.insertAdjacentElement('afterend',img);
+    }
+  }
+}
+
+function renderCarPreview(i){
+  const s=carSlides[i];
+  if(!s){document.getElementById('car-preview').innerHTML='';return;}
+  document.getElementById('car-preview').innerHTML=`
+    <div style="width:100%;padding:16px 20px;background:${esc(s.bg||'var(--s2)')};border-radius:var(--r);position:relative;overflow:hidden">
+      ${s.imageUrl?`<img src="${esc(s.imageUrl)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.18;pointer-events:none" onerror="this.style.display='none'">`:``}
+      <div style="position:relative">
+        ${s.badge?`<div style="display:inline-block;font-size:11px;font-weight:700;background:${esc(s.badgeColor||'#E52229')}22;color:${esc(s.badgeColor||'#E52229')};border:1px solid ${esc(s.badgeColor||'#E52229')}44;padding:2px 10px;border-radius:20px;margin-bottom:8px">${esc(s.badge)}</div>`:''}
+        <div style="font-size:15px;font-weight:800;color:var(--tx);margin-bottom:6px;line-height:1.3">${esc(s.title||'Sem título')}</div>
+        <div style="font-size:12px;color:var(--tx2);line-height:1.6;margin-bottom:${s.link?'12px':'0'}">${esc(s.body||'')}</div>
+        ${s.link?`<div style="display:inline-block;font-size:12px;font-weight:700;color:${esc(s.badgeColor||'#E52229')};background:${esc(s.badgeColor||'#E52229')}14;border:1px solid ${esc(s.badgeColor||'#E52229')}33;border-radius:8px;padding:5px 12px">${esc(s.linkLabel||'Saiba mais →')}</div>`:''}
+      </div>
+    </div>`;
+}
+
+function addCarouselSlide(){
+  const id='s'+(Date.now());
+  carSlides.push({id,title:'Novo slide',body:'',badge:'Info',badgeColor:'#6366f1',bg:'linear-gradient(135deg,rgba(99,102,241,0.12) 0%,rgba(0,0,0,0) 100%)',borderColor:'rgba(99,102,241,0.28)',link:'',linkLabel:'',imageUrl:''});
+  renderCarSlideList();
+  selectCarSlide(carSlides.length-1);
+}
+
+function deleteCarSlide(i){
+  if(!confirm('Remover este slide?')) return;
+  carSlides.splice(i,1);
+  carSelIdx=Math.min(carSelIdx||0,carSlides.length-1);
+  renderCarSlideList();
+  if(carSlides.length>0) selectCarSlide(carSelIdx);
+  else{document.getElementById('car-slide-editor').innerHTML='<div style="font-size:12px;color:var(--tx3);padding:20px 0;text-align:center">Nenhum slide. Clique em "+ Novo slide".</div>';document.getElementById('car-preview').innerHTML='';}
+}
+
+function saveCarousel(){
+  localStorage.setItem('dcad_carousel',JSON.stringify(carSlides));
+  // Generate code snippet to paste into Wizard.jsx ANNOUNCEMENTS array
+  const code='const ANNOUNCEMENTS='+JSON.stringify(carSlides,null,2)+';';
+  const blob=new Blob([code],{type:'text/plain'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='carousel-announcements.js';a.click();
+  URL.revokeObjectURL(url);
+  toast('Carrossel salvo! Arquivo .js gerado para substituir ANNOUNCEMENTS no Wizard.');
+}
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const SC={'Implantodontia':'#E52229','Estética Dental':'#f97316','DTM e Bruxismo':'#eab308','Prótese Dentária':'#a855f7','Periodontia':'#22c55e','Reabilitação Oral':'#0d9488','Endodontia':'#6366f1','Impressão 3D':'#f472b6','Consultoria Digital':'#94a3b8'};
@@ -1738,5 +1862,42 @@ function toast(msg,type='green'){const el=document.getElementById('toast');el.te
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 load();renderAll();
 </script>
+
+<!-- ── CARROSSEL EDITOR ── -->
+<div class="ov" id="car-ov" style="display:none">
+  <div class="modal" style="max-width:680px">
+    <div class="mh">
+      <div class="mht">📢 Editor de Carrossel — Novidades do Dashboard</div>
+      <button class="btn bg bi" onclick="document.getElementById('car-ov').style.display='none'" aria-label="Fechar">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--tx3);margin-bottom:16px;line-height:1.6">
+      Os slides abaixo aparecem no carrossel do dashboard do Wizard. Configure título, texto, badge, imagem, link e cores. Exporte o catálogo após salvar para aplicar as alterações.
+    </div>
+
+    <!-- Preview -->
+    <div id="car-preview" style="border-radius:var(--r);border:1px solid var(--bd2);overflow:hidden;margin-bottom:20px;min-height:100px;display:flex;align-items:center;justify-content:center;position:relative">
+      <div style="font-size:12px;color:var(--tx3)">← selecione um slide para ver o preview</div>
+    </div>
+
+    <!-- Slide list -->
+    <div style="display:flex;gap:10px;align-items:flex-start">
+      <!-- Lista lateral -->
+      <div style="width:180px;flex-shrink:0">
+        <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Slides</div>
+        <div id="car-slide-list" style="display:flex;flex-direction:column;gap:5px"></div>
+        <button class="add-btn" onclick="addCarouselSlide()" style="margin-top:8px;width:100%;justify-content:center">+ Novo slide</button>
+      </div>
+      <!-- Editor do slide selecionado -->
+      <div style="flex:1;min-width:0" id="car-slide-editor">
+        <div style="font-size:12px;color:var(--tx3);padding:20px 0;text-align:center">Selecione um slide à esquerda para editar</div>
+      </div>
+    </div>
+
+    <div class="mf">
+      <button class="btn bg" onclick="document.getElementById('car-ov').style.display='none'">Fechar</button>
+      <button class="btn br" onclick="saveCarousel()">💾 Salvar e exportar código</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

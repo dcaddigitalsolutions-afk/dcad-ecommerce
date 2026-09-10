@@ -305,7 +305,9 @@ export default function App() {
   // Tutorial de onboarding
   const [showTutorial,setShowTutorial]=useState(false);
   const [tutorialStep,setTutorialStep]=useState(0);
-  const [tutorialNeverShow,setTutorialNeverShow]=useState(false);
+  const [tutorialNeverShow,setTutorialNeverShow]=useState(()=>{try{return localStorage.getItem("dcad_tutorial_done")==="1";}catch{return false;}});
+  const [tutorialScrollStep,setTutorialScrollStep]=useState(0);
+  function setTutorialNeverShowAndSave(val){setTutorialNeverShow(val);try{if(val)localStorage.setItem("dcad_tutorial_done","1");else localStorage.removeItem("dcad_tutorial_done");}catch{}}
   const TUTORIAL_VIDEO_URL=""; // Cole aqui a URL do vídeo (YouTube embed ou MP4)
   // Serviços frequentes (localStorage)
   const [frequentServices,setFrequentServices]=useState(()=>{
@@ -1925,16 +1927,35 @@ input,textarea,select{touch-action:manipulation;}
         ════════════════════════════════ */}
 
         {screen==="tutorial"&&(
-          <div style={{maxWidth:680,margin:"0 auto",padding:"0 0 60px"}}>
+          <div style={{maxWidth:680,margin:"0 auto",padding:"0 0 80px"}}>
 
-            {/* ── Header ── */}
-            <div style={{background:"linear-gradient(135deg,rgba(99,102,241,0.15) 0%,rgba(229,34,41,0.08) 100%)",border:`1px solid rgba(99,102,241,0.25)`,borderRadius:16,padding:"28px 28px 24px",marginBottom:28,position:"relative",overflow:"hidden"}}>
-              <div style={{position:"absolute",right:-20,top:-20,width:120,height:120,borderRadius:"50%",background:"rgba(99,102,241,0.08)"}}/>
-              <div style={{fontSize:12,fontWeight:700,color:C.blue,letterSpacing:.5,marginBottom:8}}>D-CAD DIGITAL SOLUTIONS</div>
-              <div style={{fontSize:26,fontWeight:900,marginBottom:8,lineHeight:1.2}}>Tutorial do Sistema</div>
-              <div style={{fontSize:14,color:C.textSec,lineHeight:1.6,marginBottom:20}}>Aprenda a solicitar planejamentos digitais e guias cirúrgicos em minutos. Siga o passo a passo abaixo.</div>
-              {TUTORIAL_VIDEO_URL&&(
-                <div style={{borderRadius:12,overflow:"hidden",marginBottom:16,background:"#000",position:"relative",paddingBottom:"56.25%"}}>
+            {/* ── STICKY HEADER: voltar + progresso ── */}
+            <div style={{position:"sticky",top:0,zIndex:60,background:"rgba(15,15,15,0.95)",backdropFilter:"blur(10px)",borderBottom:`1px solid ${C.border}`,padding:"10px 16px",display:"flex",alignItems:"center",gap:12,marginBottom:0}}>
+              <button onClick={()=>setScreen("dashboard")}
+                style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:C.textSec,fontSize:13,cursor:"pointer",padding:"4px 8px",borderRadius:8,flexShrink:0,fontFamily:"inherit"}}>
+                ← Voltar
+              </button>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                  <span style={{fontSize:12,fontWeight:700,color:C.text}}>Tutorial do Sistema</span>
+                  <span style={{fontSize:11,color:C.textSec}}>{Math.min(tutorialScrollStep+1,8)} / 8</span>
+                </div>
+                <div style={{height:3,background:C.border,borderRadius:2,overflow:"hidden"}}>
+                  <div style={{height:"100%",width:`${((tutorialScrollStep+1)/8)*100}%`,background:C.red,borderRadius:2,transition:"width .3s"}}/>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Header hero ── */}
+            <div style={{background:"linear-gradient(135deg,rgba(99,102,241,0.12) 0%,rgba(229,34,41,0.06) 100%)",borderBottom:`1px solid rgba(99,102,241,0.2)`,padding:"28px 24px 24px",marginBottom:0,position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",right:-30,top:-30,width:140,height:140,borderRadius:"50%",background:"rgba(99,102,241,0.06)",pointerEvents:"none"}}/>
+              <div style={{fontSize:11,fontWeight:700,color:C.blue,letterSpacing:.8,marginBottom:8}}>D-CAD DIGITAL SOLUTIONS</div>
+              <div style={{fontSize:24,fontWeight:900,marginBottom:8,lineHeight:1.2}}>Tutorial do Sistema</div>
+              <div style={{fontSize:13,color:C.textSec,lineHeight:1.7,marginBottom:20}}>Aprenda a solicitar planejamentos digitais e guias cirúrgicos em minutos. Siga o passo a passo abaixo — 8 etapas no total.</div>
+
+              {/* Vídeo ou placeholder */}
+              {TUTORIAL_VIDEO_URL?(
+                <div style={{borderRadius:12,overflow:"hidden",marginBottom:20,background:"#000",position:"relative",paddingBottom:"56.25%"}}>
                   {TUTORIAL_VIDEO_URL.includes("youtube")||TUTORIAL_VIDEO_URL.includes("youtu.be")
                     ?<iframe src={TUTORIAL_VIDEO_URL.replace("watch?v=","embed/").replace("youtu.be/","youtube.com/embed/")}
                         style={{position:"absolute",inset:0,width:"100%",height:"100%",border:"none"}}
@@ -1943,37 +1964,56 @@ input,textarea,select{touch-action:manipulation;}
                     :<video src={TUTORIAL_VIDEO_URL} controls style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover"}}/>
                   }
                 </div>
+              ):(
+                <div style={{borderRadius:12,border:`1px dashed rgba(99,102,241,0.3)`,padding:"18px",marginBottom:20,display:"flex",alignItems:"center",gap:14,background:"rgba(99,102,241,0.04)"}}>
+                  <div style={{width:44,height:44,borderRadius:12,background:"rgba(99,102,241,0.1)",border:"1px solid rgba(99,102,241,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>🎬</div>
+                  <div>
+                    <div style={{fontSize:13,fontWeight:600,color:C.textSec,marginBottom:3}}>Vídeo tutorial em breve</div>
+                    <div style={{fontSize:12,color:C.textMut,lineHeight:1.5}}>Estamos produzindo um vídeo guiado do sistema. Por ora, siga o passo a passo abaixo.</div>
+                  </div>
+                </div>
               )}
-              <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer"}}>
-                <input type="checkbox" checked={tutorialNeverShow} onChange={e=>setTutorialNeverShow(e.target.checked)}
-                  style={{width:16,height:16,accentColor:C.blue,cursor:"pointer"}}/>
-                <span style={{fontSize:12,color:C.textSec}}>Não exibir automaticamente ao entrar no sistema</span>
-              </label>
+
+              {/* Índice de navegação rápida */}
+              <div style={{background:"rgba(0,0,0,0.2)",borderRadius:10,padding:"12px 14px"}}>
+                <div style={{fontSize:11,fontWeight:700,color:C.textSec,marginBottom:8,letterSpacing:.5}}>NAVEGAR PARA</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"4px 12px"}}>
+                  {["Acesse sua conta","Dados do paciente","Selecione a especialidade","Escolha o serviço","Configure o caso","Revise e finalize","Envie os arquivos","Acompanhe o status"].map((label,i)=>(
+                    <button key={i} onClick={()=>{
+                      const el=document.getElementById(`tut-step-${i}`);
+                      if(el)el.scrollIntoView({behavior:"smooth",block:"start"});
+                    }} style={{background:"none",border:"none",color:C.textSec,fontSize:12,cursor:"pointer",textAlign:"left",padding:"3px 0",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5}}>
+                      <span style={{fontSize:10,fontWeight:700,color:C.blue,flexShrink:0,width:14}}>{i+1}</span>
+                      <span style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* ── Etapas ── */}
             {[
               {
-                n:1, color:C.blue, ico:"👤",
+                n:1, color:C.blue, phase:"Configuração da conta", ico:"👤",
                 title:"Acesse sua conta",
                 desc:"Faça login com seu e-mail e senha cadastrados. Na primeira vez, clique em 'Criar conta' e preencha seus dados profissionais (CRO, clínica e WhatsApp para contato).",
                 tips:["Use o mesmo e-mail em todos os acessos","Guarde sua senha em local seguro","Em caso de esquecimento, entre em contato via WhatsApp"],
                 svg:(
-                  <svg viewBox="0 0 320 140" style={{width:"100%",borderRadius:10,display:"block"}}>
-                    <rect width="320" height="140" fill="#1a1a1a" rx="10"/>
-                    <rect x="40" y="20" width="240" height="100" fill="#242424" rx="8" stroke="rgba(255,255,255,0.07)" strokeWidth="1"/>
+                  <svg viewBox="0 0 320 160" style={{width:"100%",borderRadius:10,display:"block"}}>
+                    <rect width="320" height="160" fill="#1a1a1a" rx="10"/>
+                    <rect x="40" y="24" width="240" height="112" fill="#242424" rx="8" stroke="rgba(255,255,255,0.07)" strokeWidth="1"/>
                     <text x="160" y="48" textAnchor="middle" fill="#E52229" fontSize="11" fontWeight="700" fontFamily="system-ui">D-CAD DIGITAL SOLUTIONS</text>
-                    <rect x="80" y="58" width="160" height="22" fill="#2a2a2a" rx="5" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
-                    <text x="160" y="73" textAnchor="middle" fill="#666" fontSize="10" fontFamily="system-ui">E-mail</text>
-                    <rect x="80" y="86" width="160" height="22" fill="#2a2a2a" rx="5" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
-                    <text x="160" y="101" textAnchor="middle" fill="#666" fontSize="10" fontFamily="system-ui">Senha</text>
-                    <rect x="80" y="112" width="160" height="20" fill="#E52229" rx="5"/>
-                    <text x="160" y="125" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700" fontFamily="system-ui">Entrar</text>
+                    <rect x="80" y="64" width="160" height="22" fill="#2a2a2a" rx="5" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                    <text x="160" y="79" textAnchor="middle" fill="#666" fontSize="10" fontFamily="system-ui">E-mail</text>
+                    <rect x="80" y="92" width="160" height="22" fill="#2a2a2a" rx="5" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                    <text x="160" y="107" textAnchor="middle" fill="#666" fontSize="10" fontFamily="system-ui">Senha</text>
+                    <rect x="80" y="118" width="160" height="22" fill="#E52229" rx="5"/>
+                    <text x="160" y="133" textAnchor="middle" fill="#fff" fontSize="11" fontWeight="700" fontFamily="system-ui">Entrar</text>
                   </svg>
                 ),
               },
               {
-                n:2, color:"#A855F7", ico:"🦷",
+                n:2, color:C.blue, phase:"Configuração da conta", ico:"🧑‍⚕️",
                 title:"Informe os dados do paciente",
                 desc:"Após o login, clique em '+ Novo pedido'. Informe o nome completo e a data de nascimento do paciente. Você pode buscar pacientes já cadastrados ou criar um novo.",
                 tips:["Cada pedido é vinculado a um paciente","Pacientes anteriores ficam salvos para reutilização","O nome do paciente aparece no resumo do caso"],
@@ -1993,7 +2033,7 @@ input,textarea,select{touch-action:manipulation;}
                 ),
               },
               {
-                n:3, color:C.teal, ico:"🏥",
+                n:3, color:C.blue, phase:"Configuração da conta", ico:"🏥",
                 title:"Selecione a especialidade",
                 desc:"Escolha a especialidade odontológica do serviço que você precisa. As especialidades disponíveis são Implantodontia, Dentística, Prótese, DTM, Estética e outras.",
                 tips:["Cada especialidade tem serviços específicos","Implantodontia v1.0 está completa e disponível","Outras especialidades serão adicionadas em breve"],
@@ -2015,17 +2055,15 @@ input,textarea,select{touch-action:manipulation;}
                         <rect x={sp.x} y={sp.y} width="68" height="54" fill="#242424" rx="8"
                           stroke={i===0?"rgba(229,34,41,0.6)":"rgba(255,255,255,0.07)"} strokeWidth={i===0?"1.5":"1"}/>
                         <rect x={sp.x} y={sp.y} width="68" height="3" fill={sp.c} rx="2"/>
-                        <text x={sp.x+34} y={sp.y+34} textAnchor="middle" fill={sp.c} fontSize="18">
-                          {["🦷","✨","🦴","🌿","🔬","😤","💎","🔪"][i]}
-                        </text>
-                        <text x={sp.x+34} y={sp.y+50} textAnchor="middle" fill="#a0a0a0" fontSize="8" fontFamily="system-ui">{sp.t}</text>
+                        <rect x={sp.x+24} y={sp.y+20} width="20" height="4" fill={sp.c} rx="2" opacity=".6"/>
+                        <text x={sp.x+34} y={sp.y+38} textAnchor="middle" fill="#d0d0d0" fontSize="9" fontFamily="system-ui" fontWeight="600">{sp.t.split(" ")[0]}</text>
                       </g>
                     ))}
                   </svg>
                 ),
               },
               {
-                n:4, color:C.red, ico:"📋",
+                n:4, color:C.red, phase:"Realizando o pedido", ico:"📋",
                 title:"Escolha o serviço e a modalidade",
                 desc:"Selecione o serviço desejado (ex: Cirurgia Guiada Unitária) e escolha a modalidade: Planejamento + Impressão 3D (D-CAD entrega as peças) ou Somente Planejamento (você recebe os arquivos para imprimir).",
                 tips:["Somente Planejamento requer impressora 3D cadastrada","O preço muda entre as modalidades","Serviços com ⚠ não oferecem Somente Planejamento"],
@@ -2048,7 +2086,7 @@ input,textarea,select{touch-action:manipulation;}
                 ),
               },
               {
-                n:5, color:C.yellow, ico:"⚙️",
+                n:5, color:C.red, phase:"Realizando o pedido", ico:"⚙️",
                 title:"Configure o caso clínico",
                 desc:"Preencha as informações clínicas: selecione os dentes no odontograma (ou arcadas no protocolo), escolha a marca do implante, o kit e o modelo. Em seguida, defina o prazo de entrega.",
                 tips:["O odontograma aceita até 8 implantes por arcada","A marca do implante filtra automaticamente kits e modelos","Urgente tem acréscimo de 40% sobre o valor base"],
@@ -2081,7 +2119,7 @@ input,textarea,select{touch-action:manipulation;}
                 ),
               },
               {
-                n:6, color:C.green, ico:"📦",
+                n:6, color:C.red, phase:"Realizando o pedido", ico:"📦",
                 title:"Revise o pedido e finalize",
                 desc:"Na tela de Resumo do Caso, confira todos os serviços adicionados, os valores, o prazo e o tipo de frete. Você pode adicionar mais serviços ao mesmo pedido antes de finalizar.",
                 tips:["Você pode editar ou remover serviços antes de pagar","Múltiplos serviços podem ser enviados juntos","O desconto institucional é aplicado automaticamente"],
@@ -2103,7 +2141,7 @@ input,textarea,select{touch-action:manipulation;}
                 ),
               },
               {
-                n:7, color:"#0D9488", ico:"📁",
+                n:7, color:C.teal, phase:"Após o pedido", ico:"📁",
                 title:"Envie os arquivos clínicos",
                 desc:"Após o pagamento, você receberá instruções para enviar os arquivos clínicos: tomografia (DICOM/CBCT), escaneamento intraoral (STL), e outros exames conforme o serviço. O planejamento começa após o recebimento e validação dos arquivos.",
                 tips:["CBCT obrigatório para cirurgia guiada (fatias ≤0.4mm)","Escaneamento intraoral substitui modelos de gesso","Dúvidas sobre arquivos: WhatsApp (98) 98542-5982"],
@@ -2128,7 +2166,7 @@ input,textarea,select{touch-action:manipulation;}
                 ),
               },
               {
-                n:8, color:C.blue, ico:"🚀",
+                n:8, color:C.teal, phase:"Após o pedido", ico:"🚀",
                 title:"Acompanhe o planejamento",
                 desc:"Após o envio dos arquivos, nossa equipe inicia o planejamento. Você recebe atualizações por WhatsApp e pode acompanhar o status no dashboard. O prazo começa a contar a partir da validação dos arquivos.",
                 tips:["Tempo médio de planejamento: 48-72h úteis","Aprovação obrigatória antes da impressão","Suporte por WhatsApp em horário comercial"],
@@ -2161,14 +2199,22 @@ input,textarea,select{touch-action:manipulation;}
                 ),
               },
             ].map((step,idx)=>(
-              <div key={idx} style={{marginBottom:24,background:C.dark2,border:`1px solid ${C.border}`,borderRadius:16,overflow:"hidden"}}>
+              <div key={idx} id={`tut-step-${idx}`} style={{marginBottom:24,background:C.dark2,border:`1px solid ${C.border}`,borderRadius:16,overflow:"hidden"}}
+                ref={el=>{
+                  if(!el) return;
+                  const obs=new IntersectionObserver(([e])=>{if(e.isIntersecting)setTutorialScrollStep(idx);},{threshold:.3});
+                  obs.observe(el);
+                }}>
                 {/* Header da etapa */}
-                <div style={{padding:"16px 20px 14px",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:12}}>
-                  <div style={{width:36,height:36,borderRadius:10,background:step.color+"18",border:`1px solid ${step.color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>
+                <div style={{padding:"14px 20px",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:12}}>
+                  <div style={{width:38,height:38,borderRadius:10,background:step.color+"18",border:`1px solid ${step.color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0}}>
                     {step.ico}
                   </div>
-                  <div>
-                    <div style={{fontSize:11,fontWeight:700,color:step.color,letterSpacing:.5,marginBottom:2}}>ETAPA {step.n}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
+                      <span style={{fontSize:10,fontWeight:700,color:step.color,letterSpacing:.5,background:step.color+"14",border:`1px solid ${step.color}33`,borderRadius:20,padding:"1px 7px"}}>ETAPA {step.n}</span>
+                      {step.phase&&<span style={{fontSize:10,color:C.textMut}}>{step.phase}</span>}
+                    </div>
                     <div style={{fontSize:15,fontWeight:800,lineHeight:1.2}}>{step.title}</div>
                   </div>
                 </div>
@@ -2177,11 +2223,11 @@ input,textarea,select{touch-action:manipulation;}
                 {/* Descrição */}
                 <div style={{padding:"14px 20px",fontSize:13,color:C.textSec,lineHeight:1.7}}>{step.desc}</div>
                 {/* Dicas */}
-                <div style={{margin:"0 20px 16px",background:"rgba(255,255,255,0.03)",border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 14px"}}>
+                <div style={{margin:"0 20px 16px",background:step.color+"08",borderLeft:`3px solid ${step.color}`,borderRadius:"0 8px 8px 0",padding:"10px 14px"}}>
                   <div style={{fontSize:11,fontWeight:700,color:step.color,marginBottom:6,letterSpacing:.3}}>💡 DICAS</div>
                   {step.tips.map((tip,ti)=>(
-                    <div key={ti} style={{fontSize:12,color:C.textSec,display:"flex",alignItems:"flex-start",gap:6,marginBottom:ti<step.tips.length-1?4:0}}>
-                      <span style={{color:step.color,flexShrink:0}}>·</span>{tip}
+                    <div key={ti} style={{fontSize:12,color:C.textSec,display:"flex",alignItems:"flex-start",gap:6,marginBottom:ti<step.tips.length-1?5:0,lineHeight:1.55}}>
+                      <span style={{color:step.color,flexShrink:0,marginTop:1}}>✓</span>{tip}
                     </div>
                   ))}
                 </div>
@@ -2189,24 +2235,33 @@ input,textarea,select{touch-action:manipulation;}
             ))}
 
             {/* ── Footer ── */}
-            <div style={{background:`linear-gradient(135deg,rgba(229,34,41,0.08) 0%,rgba(99,102,241,0.06) 100%)`,border:`1px solid ${C.border}`,borderRadius:16,padding:"20px 24px",textAlign:"center",marginBottom:20}}>
-              <div style={{fontSize:16,fontWeight:800,marginBottom:6}}>Dúvidas? Fale com a D-CAD</div>
-              <div style={{fontSize:13,color:C.textSec,marginBottom:16}}>Nossa equipe está disponível em horário comercial para ajudar com casos, arquivos e prazos.</div>
-              <a href="https://wa.me/5598985425982" target="_blank" rel="noopener noreferrer"
-                style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(34,197,94,0.12)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:12,padding:"11px 20px",color:C.green,fontSize:14,fontWeight:700,textDecoration:"none"}}>
-                💬 WhatsApp (98) 98542-5982
-              </a>
+            <div style={{background:C.dark2,border:`1px solid ${C.border}`,borderRadius:16,padding:"20px 24px",marginBottom:16}}>
+              <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:16}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:14,fontWeight:700,marginBottom:3}}>Dúvidas? Fale com a D-CAD</div>
+                  <div style={{fontSize:12,color:C.textSec,lineHeight:1.5}}>Suporte por WhatsApp em horário comercial — casos, arquivos e prazos.</div>
+                </div>
+                <a href="https://wa.me/5598985425982" target="_blank" rel="noopener noreferrer"
+                  style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(34,197,94,0.1)",border:"1px solid rgba(34,197,94,0.25)",borderRadius:10,padding:"9px 14px",color:C.green,fontSize:12,fontWeight:700,textDecoration:"none",flexShrink:0}}>
+                  💬 WhatsApp
+                </a>
+              </div>
+              {/* Checkbox no local certo — após ler o tutorial */}
+              <label style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",padding:"10px 12px",background:"rgba(255,255,255,0.03)",borderRadius:8,border:`1px solid ${C.border}`}}>
+                <input type="checkbox" checked={tutorialNeverShow}
+                  onChange={e=>setTutorialNeverShowAndSave(e.target.checked)}
+                  style={{width:16,height:16,accentColor:C.blue,cursor:"pointer",flexShrink:0}}/>
+                <div>
+                  <div style={{fontSize:13,fontWeight:600,color:C.text}}>Não exibir este tutorial automaticamente</div>
+                  <div style={{fontSize:11,color:C.textMut,marginTop:1}}>Você poderá acessar pelo botão "Tutorial do Sistema" no dashboard a qualquer momento.</div>
+                </div>
+              </label>
             </div>
 
-            {/* Botão voltar + salvar preferência */}
-            <div style={{display:"flex",gap:10,alignItems:"center"}}>
-              <button onClick={()=>{
-                if(tutorialNeverShow)try{localStorage.setItem("dcad_tutorial_done","1");}catch{}
-                setScreen("dashboard");
-              }} style={{flex:1,padding:"13px 0",background:C.red,border:"none",borderRadius:12,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>
-                ← Voltar ao Dashboard
-              </button>
-            </div>
+            <button onClick={()=>setScreen("dashboard")}
+              style={{width:"100%",padding:"13px 0",background:C.red,border:"none",borderRadius:12,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>
+              ← Voltar ao Dashboard
+            </button>
           </div>
         )}
 

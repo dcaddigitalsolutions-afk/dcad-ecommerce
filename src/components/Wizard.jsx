@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Search, Eye, EyeOff, Check, User, Users, Archive, FolderOpen, MessageCircle, ShoppingCart, ClipboardList, CheckCircle, Clock, CreditCard, Zap, Calendar, Building2, GraduationCap, Stethoscope, Sparkles, Activity, Bone, Leaf, Microscope, Printer, Lightbulb, Package, Tag, Wrench, Ruler, FileText, AlertTriangle, Plus, Trash2, ChevronLeft, X as XIcon, Undo2, MapPin, Hash, BadgePercent, Image, Pencil } from "lucide-react";
 
 // ── Catálogo local ────────────────────────────────────────────────────────────
@@ -302,6 +302,18 @@ export default function App() {
   const [confirmDeleteId,setConfirmDeleteId]=useState(null);
   const [showStackableInfo,setShowStackableInfo]=useState(false);
   const [loadingBtn,setLoadingBtn]=useState(false);
+  // Tutorial de onboarding
+  const [showTutorial,setShowTutorial]=useState(false);
+  const [tutorialStep,setTutorialStep]=useState(0);
+  const [tutorialNeverShow,setTutorialNeverShow]=useState(false);
+  // Serviços frequentes (localStorage)
+  const [frequentServices,setFrequentServices]=useState(()=>{
+    try{return JSON.parse(localStorage.getItem("dcad_freq")||"[]");}catch{return[];}
+  });
+  // Banner de novidades
+  const [announcementDismissed,setAnnouncementDismissed]=useState(()=>{
+    try{return localStorage.getItem("dcad_ann_dismissed")==="1";}catch{return false;}
+  });
   const [editingId,setEditingId]=useState(null); // id of service being edited
   const [editingOriginal,setEditingOriginal]=useState(null); // original service snapshot for cancel
   const [showPass,setShowPass]=useState(false);
@@ -312,6 +324,27 @@ export default function App() {
     {id:"003",patient:"Ana Costa",service:"Placa Oclusal Impressa",specialty:"DTM",total:360.37,status:"pending_payment",date:"24/06/2026",filesSubmitted:false},
   ]);
   const set=(k,v)=>setA(a=>({...a,[k]:v}));
+
+  // Mostrar tutorial no primeiro login
+  useEffect(()=>{
+    if(screen==="dashboard"&&dentist){
+      const seen=localStorage.getItem("dcad_tutorial_done")==="1";
+      if(!seen){setShowTutorial(true);setTutorialStep(0);}
+    }
+  },[screen,dentist]);
+
+  // Registrar serviço frequente ao adicionar ao carrinho
+  function trackFrequentService(sv){
+    setFrequentServices(prev=>{
+      const updated=[...prev];
+      const idx=updated.findIndex(f=>f.id===sv.id);
+      if(idx>=0) updated[idx]={...updated[idx],count:(updated[idx].count||0)+1};
+      else updated.push({id:sv.id,name:sv.name,specialty:sv.specialty,price:sv.price,specialtyColor:specialty?.color,count:1});
+      const sorted=updated.sort((a,b)=>(b.count||0)-(a.count||0)).slice(0,5);
+      try{localStorage.setItem("dcad_freq",JSON.stringify(sorted));}catch{}
+      return sorted;
+    });
+  }
 
   function toggleTooth(n){
     setA(a=>{
@@ -1502,6 +1535,20 @@ input,textarea,select{touch-action:manipulation;}
         ════════════════════════════════ */}
         {screen==="dashboard"&&(
           <div style={{width:"100%"}}>
+            {/* Banner de novidades D-CAD */}
+            {!announcementDismissed&&(
+              <div style={{background:"rgba(229,34,41,0.06)",border:"1px solid rgba(229,34,41,0.2)",borderRadius:12,padding:"12px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:12}}>
+                <div style={{fontSize:20,flexShrink:0}}>🔴</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:700,color:C.red,marginBottom:2}}>Novidade D-CAD</div>
+                  <div style={{fontSize:12,color:C.textSec,lineHeight:1.5}}>Implantodontia v1.0 completa! Cirurgia Guiada, Protocolos e Stackable Guide disponíveis. Confira os novos fluxos.</div>
+                </div>
+                <button onClick={()=>{setAnnouncementDismissed(true);try{localStorage.setItem("dcad_ann_dismissed","1");}catch{}}}
+                  aria-label="Fechar aviso"
+                  style={{background:"none",border:"none",color:C.textSec,fontSize:16,cursor:"pointer",padding:4,flexShrink:0}}>✕</button>
+              </div>
+            )}
+
             {/* Boas-vindas */}
             <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:24,gap:12}}>
               <div>
@@ -1513,10 +1560,17 @@ input,textarea,select{touch-action:manipulation;}
                   {accountType==="dentista"&&<span style={{fontSize:12,fontWeight:700,background:C.dark3,color:C.textSec,padding:"3px 9px",borderRadius:16}}> Dentista</span>}
                 </div>
               </div>
-              <button onClick={()=>{setA({preplan:null,teeth:[],arch:{sup:false,inf:false},implantQty:null,dsd3dAddon:false,brand:null,kit:null,model:null,modelText:"",comps:{},observacoes:"",urgency:"normal",slicedFile:false,printerId:null});setSpecialty(null);setService(null);setServiceType(null);setSelectedGroup(null);setScreen("patient");}}
-                style={{background:C.red,border:"none",borderRadius:12,padding:"11px 18px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap"}}>
-                + Novo pedido
-              </button>
+              <div style={{display:"flex",gap:8,flexShrink:0}}>
+                <button onClick={()=>{setShowTutorial(true);setTutorialStep(0);}}
+                  title="Ver tutorial"
+                  style={{background:C.dark2,border:`1px solid ${C.border2}`,borderRadius:12,padding:"11px 12px",color:C.textSec,fontSize:13,cursor:"pointer",whiteSpace:"nowrap"}}>
+                  🎓
+                </button>
+                <button onClick={()=>{setA({preplan:null,teeth:[],arch:{sup:false,inf:false},implantQty:null,dsd3dAddon:false,brand:null,kit:null,model:null,modelText:"",comps:{},observacoes:"",urgency:"normal",slicedFile:false,printerId:null});setSpecialty(null);setService(null);setServiceType(null);setSelectedGroup(null);setScreen("patient");}}
+                  style={{background:C.red,border:"none",borderRadius:12,padding:"11px 18px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>
+                  + Novo pedido
+                </button>
+              </div>
             </div>
 
             {/* Stats */}
@@ -1532,6 +1586,41 @@ input,textarea,select{touch-action:manipulation;}
                 </div>
               ))}
             </div>
+
+            {/* Sparkline — atividade 30 dias */}
+            {(()=>{
+              // Gera dados de atividade simulados baseados nos pedidos reais
+              const weeks=["Sem 1","Sem 2","Sem 3","Sem 4"];
+              const vals=[mockOrders.length>0?2:0, mockOrders.length>0?1:0, mockOrders.length>0?3:0, services.length>0?services.length:mockOrders.length>0?2:0];
+              const max=Math.max(...vals,1);
+              const W=260,H=40,pad=4;
+              const pts=vals.map((v,i)=>({
+                x:pad+i*(W-2*pad)/3,
+                y:H-pad-(v/max)*(H-2*pad)
+              }));
+              const path=pts.map((p,i)=>i===0?`M${p.x},${p.y}`:`L${p.x},${p.y}`).join(" ");
+              const area=path+` L${pts[pts.length-1].x},${H} L${pts[0].x},${H} Z`;
+              if(vals.every(v=>v===0)) return null;
+              return(
+                <div style={{background:C.dark2,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 16px",marginBottom:16}}>
+                  <div style={{fontSize:12,color:C.textSec,fontWeight:700,letterSpacing:.5,marginBottom:8}}>ATIVIDADE — ÚLTIMAS 4 SEMANAS</div>
+                  <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{display:"block",height:40}}>
+                    <defs>
+                      <linearGradient id="spark-grad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={C.red} stopOpacity="0.3"/>
+                        <stop offset="100%" stopColor={C.red} stopOpacity="0.02"/>
+                      </linearGradient>
+                    </defs>
+                    <path d={area} fill="url(#spark-grad)"/>
+                    <path d={path} fill="none" stroke={C.red} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    {pts.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r={3} fill={C.red}/>)}
+                  </svg>
+                  <div style={{display:"flex",justifyContent:"space-between",marginTop:4}}>
+                    {weeks.map((w,i)=><span key={i} style={{fontSize:10,color:C.textSec}}>{w}</span>)}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Ações rápidas */}
             <div style={{marginBottom:24}}>
@@ -1556,6 +1645,39 @@ input,textarea,select{touch-action:manipulation;}
                 ))}
               </div>
             </div>
+
+            {/* Serviços frequentes */}
+            {frequentServices.length>0&&(
+              <div style={{marginBottom:24}}>
+                <div style={{fontSize:13,fontWeight:700,color:C.textSec,letterSpacing:1,marginBottom:10,display:"flex",alignItems:"center",gap:6}}>
+                  <span>⭐</span> MEUS SERVIÇOS FREQUENTES
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  {frequentServices.slice(0,3).map((fs,i)=>(
+                    <div key={i} style={{background:C.dark2,border:`1px solid ${C.border}`,borderRadius:12,padding:"12px 14px",display:"flex",alignItems:"center",gap:12}}>
+                      <div style={{width:36,height:36,borderRadius:8,background:(fs.specialtyColor||C.red)+"18",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:16}}>
+                        ⭐
+                      </div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontWeight:700,fontSize:13,lineHeight:1.3}}>{fs.name}</div>
+                        <div style={{fontSize:12,color:C.textSec}}>{fs.specialty} · {fs.count} pedido{fs.count>1?"s":""}</div>
+                      </div>
+                      <div style={{textAlign:"right",flexShrink:0}}>
+                        <div style={{fontSize:14,fontWeight:900,color:C.red,marginBottom:6}}>{fmt(fs.price||0)}</div>
+                        <button onClick={()=>{
+                          const sp=CATALOG.find(cat=>cat.name===fs.specialty||cat.specialties?.some(s=>s.name===fs.specialty));
+                          const foundSp=CATALOG.find(cat=>cat.services?.some(s=>s.id===fs.id));
+                          if(foundSp){setSpecialty(foundSp);setScreen("services");}
+                          else setScreen("specialties");
+                        }} style={{background:"rgba(229,34,41,0.1)",border:"1px solid rgba(229,34,41,0.25)",borderRadius:8,padding:"4px 10px",color:C.red,fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>
+                          Contratar →
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Carrinhos pendentes */}
             {pendingCarts.length>0&&(
@@ -1669,7 +1791,23 @@ input,textarea,select{touch-action:manipulation;}
                           </div>
                         </div>
                         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
-                          <div style={{fontSize:12,background:s.bg,color:s.color,padding:"2px 7px",borderRadius:16,fontWeight:700,whiteSpace:"nowrap"}}>{s.label}</div>
+                          <div style={{flex:1,minWidth:0}}>
+                            <div style={{fontSize:11,background:s.bg,color:s.color,padding:"2px 7px",borderRadius:16,fontWeight:700,whiteSpace:"nowrap",display:"inline-block",marginBottom:4}}>{s.label}</div>
+                            {(o.status==="planning"||o.status==="printing")&&(
+                              <div style={{display:"flex",gap:3,alignItems:"center"}}>
+                                {["Recebido","Planejamento","Impressão","Enviado"].map((step,si)=>{
+                                  const stepIdx={planning:1,printing:2}[o.status]||0;
+                                  const done=si<=stepIdx;
+                                  return(
+                                    <React.Fragment key={si}>
+                                      <div style={{width:6,height:6,borderRadius:"50%",background:done?s.color:"rgba(255,255,255,0.12)",flexShrink:0}}/>
+                                      {si<3&&<div style={{flex:1,height:2,background:done&&si<stepIdx?s.color:"rgba(255,255,255,0.08)",borderRadius:1}}/>}
+                                    </React.Fragment>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
                           <div style={{fontWeight:800,fontSize:13,color:C.text,flexShrink:0}}>{fmt(o.total)}</div>
                         </div>
                         {o.status==="pending_payment"&&(
@@ -2026,25 +2164,42 @@ input,textarea,select{touch-action:manipulation;}
                       INDISPONÍVEL EM SOMENTE PLANEJAMENTO
                     </div>
                   )}
-                  {/* Barra de cor */}
-                  <div style={{height:3,background:specialty.color,width:"100%"}}/>
+                  {/* Hero image / barra de cor */}
+                  {sv.imageUrl?(
+                    <div style={{position:"relative",width:"100%",height:140,overflow:"hidden",flexShrink:0}}>
+                      <img src={sv.imageUrl} alt={sv.name} onError={e=>{e.target.parentElement.style.display="none";}}
+                        style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>
+                      <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom, rgba(0,0,0,0) 20%, rgba(0,0,0,0.85) 100%)"}}/>
+                      <div style={{position:"absolute",bottom:10,left:12,right:12}}>
+                        <div style={{fontWeight:800,fontSize:15,color:"#fff",lineHeight:1.2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{disp.name}</div>
+                        <div style={{fontWeight:900,fontSize:16,color:specialty.color,marginTop:2}}>{fmt(applyDiscount(disp.price))}</div>
+                      </div>
+                      <div style={{position:"absolute",top:8,right:8,width:28,height:28,borderRadius:8,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                        <SpecIcon id={specialty.id} size={14} color={specialty.color}/>
+                      </div>
+                    </div>
+                  ):(
+                    <div style={{height:3,background:specialty.color,width:"100%"}}/>
+                  )}
                   <div style={{padding:"14px 16px",display:"flex",gap:12,alignItems:"flex-start"}}>
-                    {/* Ícone / número */}
-                    <div style={{width:44,height:44,borderRadius:12,background:specialty.color+"18",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    {/* Ícone / número — oculto quando tem hero image */}
+                    {!sv.imageUrl&&<div style={{width:44,height:44,borderRadius:12,background:specialty.color+"18",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                       {sv.exactQty
                         ?<span style={{fontSize:18,fontWeight:900,color:specialty.color}}>{sv.exactQty}</span>
                         :<SpecIcon id={specialty.id} size={20} color={specialty.color}/>
                       }
-                    </div>
+                    </div>}
                     <div style={{flex:1,minWidth:0}}>
-                      {/* Nome + preço */}
-                      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:8,marginBottom:5}}>
-                        <div style={{fontWeight:800,fontSize:14,lineHeight:1.3}}>{disp.name}</div>
-                        <div style={{textAlign:"right",flexShrink:0}}>
-                          {archLabel&&<div style={{fontSize:12,color:C.textSec,marginBottom:1}}>{archLabel}</div>}
-                          <div style={{fontWeight:900,fontSize:15,color:specialty.color}}>{fmt(applyDiscount(disp.price))}</div>
+                      {/* Nome + preço — oculto quando há hero image */}
+                      {!sv.imageUrl&&(
+                        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:8,marginBottom:5}}>
+                          <div style={{fontWeight:800,fontSize:14,lineHeight:1.3}}>{disp.name}</div>
+                          <div style={{textAlign:"right",flexShrink:0}}>
+                            {archLabel&&<div style={{fontSize:12,color:C.textSec,marginBottom:1}}>{archLabel}</div>}
+                            <div style={{fontWeight:900,fontSize:15,color:specialty.color}}>{fmt(applyDiscount(disp.price))}</div>
+                          </div>
                         </div>
-                      </div>
+                      )}
                       {/* Descrição */}
                       <div style={{fontSize:12,color:C.textSec,lineHeight:1.55,marginBottom:8}}>{disp.fullDesc}</div>
                       {/* Exames + O que está incluso — lado a lado */}
@@ -2088,11 +2243,7 @@ input,textarea,select{touch-action:manipulation;}
                           <span style={{color:C.red,fontWeight:800}}>SOMENTE PLANEJAMENTO</span>
                         </div>
                       )}
-                      {sv.imageUrl&&(
-                        <img src={sv.imageUrl} alt={sv.name}
-                          style={{width:"100%",borderRadius:8,marginTop:8,objectFit:"cover",maxHeight:90,opacity:.85}}
-                          onError={e=>{e.target.style.display="none";}}/>
-                      )}
+
                     </div>
                   </div>
                 </button>

@@ -259,6 +259,9 @@ export default function App() {
   const [screenVisible,setScreenVisible]=useState(true);
   const [pendingScreen,setPendingScreen]=useState(null);
   const [authTab,setAuthTab]=useState("login");
+  const [forgotPw,setForgotPw]=useState(false);
+  const [forgotEmail,setForgotEmail]=useState("");
+  const [forgotSent,setForgotSent]=useState(false);
   const [dentist,setDentist]=useState(null);
   const [profileComplete,setProfileComplete]=useState(false);
   const [profile,setProfile]=useState({docType:"cpf",cpf:"",cnpj:"",razaoSocial:"",rua:"",numero:"",bairro:"",complemento:"",cidade:"",estado:"",cep:"",entregaIgual:true,entRua:"",entNumero:"",entBairro:"",entComplemento:"",entCidade:"",entEstado:"",entCep:""});
@@ -1165,22 +1168,72 @@ input,textarea,select{touch-action:manipulation;}
               ))}
             </div>
 
-            {authTab==="login"&&(
+            {authTab==="login"&&!forgotPw&&(
               <div>
                 <Field label="E-mail" type="email" value={loginForm.email} onChange={v=>setLoginForm(f=>({...f,email:v}))} placeholder="seu@email.com"/>
                 <div style={{position:"relative"}}>
-                <Field label="Senha" type={showPass?"text":"password"} value={loginForm.senha} onChange={v=>setLoginForm(f=>({...f,senha:v}))} placeholder="••••••••"/>
-                <button type="button" onClick={()=>setShowPass(p=>!p)} aria-label={showPass?"Ocultar senha":"Mostrar senha"}
-                  style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:C.textSec,cursor:"pointer",display:"flex",alignItems:"center",paddingTop:16}}>
-                  {showPass?<EyeOff size={16}/>:<Eye size={16}/>}
-                </button>
-              </div>
-                <button onClick={()=>{if(!loginForm.email||!loginForm.senha){setToast("Preencha e-mail e senha.");return;}setDentist({nome:"Dr. Leonardo Araújo",cro:"CRO-MA 6789",clinica:"D-CAD Dental Digital Solutions",email:loginForm.email,whatsapp:"(98) 98542-5982",accountType:"dentista",accountStatus:"active"});setProfile({docType:"cpf",cpf:"000.000.000-00",rua:"Av. Colares Moreira",numero:"444",bairro:"Renascença II",complemento:"Sala 343",cidade:"São Luís",estado:"MA",cep:"65060-645",entregaIgual:true,entRua:"",entNumero:"",entBairro:"",entCidade:"",entEstado:"",entCep:""});setProfileComplete(true);setScreen("dashboard");}} style={btnStyle(C.red)}>
+                  <Field label="Senha" type={showPass?"text":"password"} value={loginForm.senha} onChange={v=>setLoginForm(f=>({...f,senha:v}))} placeholder="••••••••"/>
+                  <button type="button" onClick={()=>setShowPass(p=>!p)} aria-label={showPass?"Ocultar senha":"Mostrar senha"}
+                    style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:C.textSec,cursor:"pointer",display:"flex",alignItems:"center",paddingTop:16}}>
+                    {showPass?<EyeOff size={16}/>:<Eye size={16}/>}
+                  </button>
+                </div>
+                <button onClick={()=>{
+                  if(!loginForm.email||!loginForm.senha){setToast("Preencha e-mail e senha.");return;}
+                  setDentist({nome:"Dr. Leonardo Araújo",cro:"CRO-MA 6789",clinica:"D-CAD Dental Digital Solutions",email:loginForm.email,whatsapp:"(98) 98542-5982",accountType:"dentista",accountStatus:"active"});
+                  setProfile({docType:"cpf",cpf:"000.000.000-00",rua:"Av. Colares Moreira",numero:"444",bairro:"Renascença II",complemento:"Sala 343",cidade:"São Luís",estado:"MA",cep:"65060-645",entregaIgual:true,entRua:"",entNumero:"",entBairro:"",entCidade:"",entEstado:"",entCep:""});
+                  setProfileComplete(true);setScreen("dashboard");
+                }} style={btnStyle(C.red)}>
                   Entrar
                 </button>
-                <div style={{textAlign:"center",marginTop:12}}>
-                  <button onClick={()=>{}} style={{background:"none",border:"none",color:C.textSec,fontSize:12,cursor:"pointer",textDecoration:"underline"}}>Esqueci minha senha</button>
+                <div style={{textAlign:"center",marginTop:14}}>
+                  <button onClick={()=>{setForgotPw(true);setForgotSent(false);setForgotEmail(loginForm.email||"");}}
+                    style={{background:"none",border:"none",color:C.blue,fontSize:12,cursor:"pointer",textDecoration:"underline",fontFamily:"inherit"}}>
+                    Esqueci minha senha
+                  </button>
                 </div>
+              </div>
+            )}
+
+            {/* ── RECUPERAÇÃO DE SENHA ── */}
+            {authTab==="login"&&forgotPw&&(
+              <div>
+                <div style={{background:"rgba(99,102,241,0.06)",border:`1px solid rgba(99,102,241,0.2)`,borderRadius:12,padding:"16px",marginBottom:20}}>
+                  <div style={{fontSize:14,fontWeight:700,marginBottom:4}}>Recuperar senha</div>
+                  <div style={{fontSize:12,color:C.textSec,lineHeight:1.5}}>Informe o e-mail cadastrado. Você receberá um link para redefinir sua senha.</div>
+                </div>
+                {!forgotSent?(
+                  <div>
+                    <Field label="E-mail cadastrado" type="email" value={forgotEmail} onChange={v=>setForgotEmail(v)} placeholder="seu@email.com"/>
+                    <button onClick={()=>{
+                      if(!forgotEmail||!forgotEmail.includes("@")){setToast("Informe um e-mail válido.");return;}
+                      // Aqui integrar com Supabase resetPasswordForEmail
+                      setForgotSent(true);
+                    }} style={btnStyle(C.blue)}>
+                      Enviar link de recuperação
+                    </button>
+                    <div style={{textAlign:"center",marginTop:12}}>
+                      <button onClick={()=>setForgotPw(false)}
+                        style={{background:"none",border:"none",color:C.textSec,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>
+                        ← Voltar ao login
+                      </button>
+                    </div>
+                  </div>
+                ):(
+                  <div style={{textAlign:"center",padding:"20px 0"}}>
+                    <div style={{fontSize:36,marginBottom:12}}>✉️</div>
+                    <div style={{fontSize:15,fontWeight:700,marginBottom:8}}>E-mail enviado!</div>
+                    <div style={{fontSize:13,color:C.textSec,lineHeight:1.6,marginBottom:20}}>
+                      Enviamos um link de recuperação para<br/>
+                      <strong style={{color:C.text}}>{forgotEmail}</strong>.<br/>
+                      Verifique sua caixa de entrada e spam.
+                    </div>
+                    <button onClick={()=>{setForgotPw(false);setForgotSent(false);}}
+                      style={{background:"none",border:`1px solid ${C.border}`,borderRadius:10,padding:"10px 24px",color:C.textSec,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
+                      Voltar ao login
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1927,12 +1980,12 @@ input,textarea,select{touch-action:manipulation;}
         ════════════════════════════════ */}
 
         {screen==="tutorial"&&(
-          <div style={{maxWidth:680,margin:"0 auto",padding:"0 0 80px"}}>
+          <div style={{maxWidth:680,margin:"0 auto",padding:"0 0 80px",position:"relative"}}>
 
             {/* ── STICKY HEADER: voltar + progresso ── */}
-            <div style={{position:"sticky",top:0,zIndex:60,background:"rgba(15,15,15,0.95)",backdropFilter:"blur(10px)",borderBottom:`1px solid ${C.border}`,padding:"10px 16px",display:"flex",alignItems:"center",gap:12,marginBottom:0}}>
-              <button onClick={()=>setScreen("dashboard")}
-                style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:C.textSec,fontSize:13,cursor:"pointer",padding:"4px 8px",borderRadius:8,flexShrink:0,fontFamily:"inherit"}}>
+            <div style={{position:"sticky",top:0,zIndex:60,background:"rgba(10,10,10,0.97)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderBottom:`1px solid ${C.border2}`,padding:"10px 16px",display:"flex",alignItems:"center",gap:12,marginBottom:0,borderRadius:0}}>
+              <button onClick={()=>{setScreen("dashboard");setTutorialScrollStep(0);}}
+                style={{display:"flex",alignItems:"center",gap:6,background:"none",border:`1px solid ${C.border}`,color:C.textSec,fontSize:13,cursor:"pointer",padding:"6px 12px",borderRadius:8,flexShrink:0,fontFamily:"inherit",minHeight:36}}>
                 ← Voltar
               </button>
               <div style={{flex:1,minWidth:0}}>
@@ -2038,25 +2091,25 @@ input,textarea,select{touch-action:manipulation;}
                 desc:"Escolha a especialidade odontológica do serviço que você precisa. As especialidades disponíveis são Implantodontia, Dentística, Prótese, DTM, Estética e outras.",
                 tips:["Cada especialidade tem serviços específicos","Implantodontia v1.0 está completa e disponível","Outras especialidades serão adicionadas em breve"],
                 svg:(
-                  <svg viewBox="0 0 320 140" style={{width:"100%",borderRadius:10,display:"block"}}>
-                    <rect width="320" height="140" fill="#1a1a1a" rx="10"/>
-                    <text x="16" y="26" fill="#0D9488" fontSize="11" fontWeight="700" fontFamily="system-ui">Selecione a Especialidade</text>
+                  <svg viewBox="0 0 320 190" style={{width:"100%",borderRadius:10,display:"block"}}>
+                    <rect width="320" height="190" fill="#1a1a1a" rx="10"/>
+                    <text x="16" y="22" fill="#0D9488" fontSize="10" fontWeight="700" fontFamily="system-ui">Selecione a Especialidade</text>
                     {[
-                      {x:16,y:34,c:"#E52229",t:"Implantodontia"},
-                      {x:90,y:34,c:"#6366f1",t:"Dentística"},
-                      {x:164,y:34,c:"#eab308",t:"Prótese"},
-                      {x:238,y:34,c:"#22c55e",t:"Periodontia"},
-                      {x:16,y:94,c:"#A855F7",t:"Endodontia"},
-                      {x:90,y:94,c:"#0D9488",t:"DTM"},
-                      {x:164,y:94,c:"#ea580c",t:"Estética"},
-                      {x:238,y:94,c:"#2563eb",t:"Cirurgia"},
+                      {x:8, y:30,c:"#E52229",t:"Implanto"},
+                      {x:86,y:30,c:"#6366f1",t:"Dentística"},
+                      {x:164,y:30,c:"#eab308",t:"Prótese"},
+                      {x:242,y:30,c:"#22c55e",t:"Periodontia"},
+                      {x:8, y:108,c:"#A855F7",t:"Endodontia"},
+                      {x:86,y:108,c:"#0D9488",t:"DTM"},
+                      {x:164,y:108,c:"#ea580c",t:"Estética"},
+                      {x:242,y:108,c:"#2563eb",t:"Cirurgia"},
                     ].map((sp,i)=>(
                       <g key={i}>
-                        <rect x={sp.x} y={sp.y} width="68" height="54" fill="#242424" rx="8"
+                        <rect x={sp.x} y={sp.y} width="72" height="70" fill="#242424" rx="8"
                           stroke={i===0?"rgba(229,34,41,0.6)":"rgba(255,255,255,0.07)"} strokeWidth={i===0?"1.5":"1"}/>
-                        <rect x={sp.x} y={sp.y} width="68" height="3" fill={sp.c} rx="2"/>
-                        <rect x={sp.x+24} y={sp.y+20} width="20" height="4" fill={sp.c} rx="2" opacity=".6"/>
-                        <text x={sp.x+34} y={sp.y+38} textAnchor="middle" fill="#d0d0d0" fontSize="9" fontFamily="system-ui" fontWeight="600">{sp.t.split(" ")[0]}</text>
+                        <rect x={sp.x} y={sp.y} width="72" height="3" fill={sp.c} rx="2"/>
+                        <rect x={sp.x+10} y={sp.y+22} width="52" height="4" fill={sp.c} rx="2" opacity=".3"/>
+                        <text x={sp.x+36} y={sp.y+50} textAnchor="middle" fill="#d0d0d0" fontSize="9.5" fontFamily="system-ui" fontWeight="600">{sp.t}</text>
                       </g>
                     ))}
                   </svg>
@@ -2066,22 +2119,22 @@ input,textarea,select{touch-action:manipulation;}
                 n:4, color:C.red, phase:"Realizando o pedido", ico:"📋",
                 title:"Escolha o serviço e a modalidade",
                 desc:"Selecione o serviço desejado (ex: Cirurgia Guiada Unitária) e escolha a modalidade: Planejamento + Impressão 3D (D-CAD entrega as peças) ou Somente Planejamento (você recebe os arquivos para imprimir).",
-                tips:["Somente Planejamento requer impressora 3D cadastrada","O preço muda entre as modalidades","Serviços com ⚠ não oferecem Somente Planejamento"],
+                tips:["Somente Planejamento requer que você possua uma impressora 3D","O preço muda entre as modalidades","Serviços com ⚠ não oferecem modalidade Somente Planejamento"],
                 svg:(
-                  <svg viewBox="0 0 320 140" style={{width:"100%",borderRadius:10,display:"block"}}>
-                    <rect width="320" height="140" fill="#1a1a1a" rx="10"/>
+                  <svg viewBox="0 0 320 165" style={{width:"100%",borderRadius:10,display:"block"}}>
+                    <rect width="320" height="165" fill="#1a1a1a" rx="10"/>
                     <rect x="16" y="16" width="288" height="64" fill="#242424" rx="8" stroke="rgba(229,34,41,0.3)" strokeWidth="1.5"/>
                     <rect x="16" y="16" width="288" height="3" fill="#E52229" rx="2"/>
                     <text x="32" y="40" fill="#fff" fontSize="12" fontWeight="700" fontFamily="system-ui">Cirurgia Guiada Unitária</text>
                     <text x="32" y="56" fill="#a0a0a0" fontSize="10" fontFamily="system-ui">Guia para 1 implante · A partir de R$ 389</text>
                     <rect x="28" y="64" width="80" height="10" fill="rgba(34,197,94,0.15)" rx="3" stroke="rgba(34,197,94,0.3)" strokeWidth="0.5"/>
                     <text x="68" y="72" textAnchor="middle" fill="#22c55e" fontSize="8" fontFamily="system-ui">✓ Exames inclusos</text>
-                    <rect x="16" y="92" width="138" height="38" fill="#242424" rx="8" stroke="rgba(229,34,41,0.4)" strokeWidth="1.5"/>
-                    <text x="85" y="108" textAnchor="middle" fill="#E52229" fontSize="10" fontWeight="700" fontFamily="system-ui">🖨 Plan. + Impressão</text>
-                    <text x="85" y="122" textAnchor="middle" fill="#a0a0a0" fontSize="9" fontFamily="system-ui">D-CAD entrega as peças</text>
-                    <rect x="162" y="92" width="142" height="38" fill="#2a2a2a" rx="8" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
-                    <text x="233" y="108" textAnchor="middle" fill="#a0a0a0" fontSize="10" fontWeight="700" fontFamily="system-ui">📐 Só Planejamento</text>
-                    <text x="233" y="122" textAnchor="middle" fill="#666" fontSize="9" fontFamily="system-ui">Você imprime os arquivos</text>
+                    <rect x="16" y="96" width="138" height="58" fill="#242424" rx="8" stroke="rgba(229,34,41,0.4)" strokeWidth="1.5"/>
+                    <text x="85" y="118" textAnchor="middle" fill="#E52229" fontSize="10" fontWeight="700" fontFamily="system-ui">Plan. + Impressao</text>
+                    <text x="85" y="134" textAnchor="middle" fill="#a0a0a0" fontSize="9" fontFamily="system-ui">D-CAD entrega as pecas</text>
+                    <rect x="162" y="96" width="142" height="58" fill="#2a2a2a" rx="8" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                    <text x="233" y="118" textAnchor="middle" fill="#a0a0a0" fontSize="10" fontWeight="700" fontFamily="system-ui">So Planejamento</text>
+                    <text x="233" y="134" textAnchor="middle" fill="#666" fontSize="9" fontFamily="system-ui">Voce imprime os arquivos</text>
                   </svg>
                 ),
               },
@@ -2091,30 +2144,30 @@ input,textarea,select{touch-action:manipulation;}
                 desc:"Preencha as informações clínicas: selecione os dentes no odontograma (ou arcadas no protocolo), escolha a marca do implante, o kit e o modelo. Em seguida, defina o prazo de entrega.",
                 tips:["O odontograma aceita até 8 implantes por arcada","A marca do implante filtra automaticamente kits e modelos","Urgente tem acréscimo de 40% sobre o valor base"],
                 svg:(
-                  <svg viewBox="0 0 320 140" style={{width:"100%",borderRadius:10,display:"block"}}>
-                    <rect width="320" height="140" fill="#1a1a1a" rx="10"/>
-                    <text x="16" y="24" fill="#eab308" fontSize="11" fontWeight="700" fontFamily="system-ui">Selecione os dentes</text>
-                    <g transform="translate(16,32)">
+                  <svg viewBox="0 0 320 175" style={{width:"100%",borderRadius:10,display:"block"}}>
+                    <rect width="320" height="175" fill="#1a1a1a" rx="10"/>
+                    <text x="16" y="24" fill="#E52229" fontSize="11" fontWeight="700" fontFamily="system-ui">Selecione os dentes</text>
+                    <g transform="translate(8,32)">
                       {[...Array(16)].map((_,i)=>{
                         const row=i<8?0:1;const col=i%8;
-                        const x=col*18;const y=row*22;
+                        const x=col*19;const y=row*26;
                         const sel=[2,4,7].includes(i);
                         return(
                           <g key={i}>
-                            <rect x={x} y={y} width="16" height="18" fill={sel?"rgba(229,34,41,0.25)":"#2a2a2a"} rx="3"
+                            <rect x={x} y={y} width="17" height="21" fill={sel?"rgba(229,34,41,0.25)":"#2a2a2a"} rx="3"
                               stroke={sel?"#E52229":"rgba(255,255,255,0.1)"} strokeWidth={sel?"1.5":"1"}/>
-                            <text x={x+8} y={y+12} textAnchor="middle" fill={sel?"#E52229":"#555"} fontSize="7" fontFamily="system-ui">
+                            <text x={x+8} y={y+14} textAnchor="middle" fill={sel?"#E52229":"#555"} fontSize="7.5" fontFamily="system-ui">
                               {[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28][i]}
                             </text>
                           </g>
                         );
                       })}
                     </g>
-                    <text x="16" y="92" fill="#eab308" fontSize="11" fontWeight="700" fontFamily="system-ui">Marca do implante</text>
-                    <rect x="16" y="98" width="288" height="22" fill="#242424" rx="6" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
-                    <text x="28" y="113" fill="#a0a0a0" fontSize="10" fontFamily="system-ui">Neodent · Grand Morse · Titamax</text>
-                    <rect x="272" y="100" width="24" height="18" fill="#E52229" rx="4"/>
-                    <text x="284" y="113" textAnchor="middle" fill="#fff" fontSize="12">▾</text>
+                    <text x="16" y="108" fill="#E52229" fontSize="11" fontWeight="700" fontFamily="system-ui">Marca do implante</text>
+                    <rect x="16" y="114" width="288" height="24" fill="#242424" rx="6" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
+                    <text x="28" y="130" fill="#a0a0a0" fontSize="10" fontFamily="system-ui">Neodent · Grand Morse · Titamax</text>
+                    <rect x="270" y="116" width="26" height="20" fill="#E52229" rx="4"/>
+                    <text x="283" y="130" textAnchor="middle" fill="#fff" fontSize="12">▾</text>
                   </svg>
                 ),
               },
